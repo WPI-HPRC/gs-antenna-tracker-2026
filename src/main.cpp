@@ -1,18 +1,20 @@
-#include <Arduino.h>
+/**
+ * The tracker stuff isn't implemented it, but this should be mostly what main includes.
+ * The purpose of main is legit just to setup serial communication and run tracker in a loop.
+ */
 
-// put function declarations here:
-int myFunction(int, int);
+
+#include <Arduino.h>
+#include "tracker.h"
+
+Tracker tracker;
 
 void setup() {
-  // put your setup code here, to run once:
-  int result = myFunction(2, 3);
+  Serial.begin(115200);
+
+  tracker.InitializeTracker();
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-}
-
-// put function definitions here:
-int myFunction(int x, int y) {
-  return x + y;
+  tracker.trackerLoop();
 }
