@@ -10,6 +10,7 @@
 Tracker tracker;
 
 void setup() {
+  // Initialize serial communication
   Serial.begin(115200);
 
   tracker.InitializeTracker();
