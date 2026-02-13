@@ -21,6 +21,7 @@ AccelStepper stepperAz(AccelStepper::DRIVER, AZ_STEP_PIN, AZ_DIR_PIN);
 AccelStepper stepperEl(AccelStepper::DRIVER, EL_STEP_PIN, EL_DIR_PIN);
 
 void setup() {
+  // Initialize serial communication
   Serial.begin(115200);
   stepperAz.setMaxSpeed(6700); // more temporary numbers
   stepperEl.setMaxSpeed(6700);
