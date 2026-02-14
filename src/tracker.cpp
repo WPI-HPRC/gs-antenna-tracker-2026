@@ -46,5 +46,5 @@ void Tracker::TrackerLoop(void)
     }
 
     // Checkers and Handlers
-    if(CheckHallEffect()) HandleHallEffect();
+    // if(CheckHallEffect()) HandleHallEffect();
 }

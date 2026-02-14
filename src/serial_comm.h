@@ -35,12 +35,12 @@
 #define __SERIAL_COMM_H
 
 #include <Arduino.h>
-#include "robot.h"
+#include "tracker.h"
 
 String serialInput;
 String serialInput2;
 
-bool Robot::CheckSerialInput(void)
+bool Tracker::CheckSerialInput(void)
 {
   if(Serial.available())
   {
@@ -54,41 +54,41 @@ bool Robot::CheckSerialInput(void)
   return false;
 }
 
-void Robot::ParseSerialInput(void)
+void Tracker::ParseSerialInput(void)
 {
   float value;
   switch(serialInput[0])
   {
-    case 'P':
-      value = serialInput.substring(1).toFloat();
-      Serial.print("Setting Kp to: ");
-      Serial.println(value);
-      chassis.SetMotorKp(value);
-      break;
-    case 'I':
-    value = serialInput.substring(1).toFloat();
-      Serial.print("Setting Ki to: ");
-      Serial.println(value);
-      chassis.SetMotorKi(value);
-      break;
-    case 'D':
-      value = serialInput.substring(1).toFloat();
-      Serial.print("Setting Kd to: ");
-      Serial.println(value);
-      chassis.SetMotorKd(value);
-      break;
-    case 'L': //target speed
-      value = serialInput.substring(1).toFloat();
-      Serial.print("Setting left target to: ");
-      Serial.println(value);
-      chassis.SetWheelSpeeds(value, 0);
-      break;
-    case 'R': //target speed
-      value = serialInput.substring(1).toFloat();
-      Serial.print("Setting right target to: ");
-      Serial.println(value);
-      chassis.SetWheelSpeeds(0, value);
-      break;
+    // case 'P':
+    //   value = serialInput.substring(1).toFloat();
+    //   Serial.print("Setting Kp to: ");
+    //   Serial.println(value);
+    //   chassis.SetMotorKp(value);
+    //   break;
+    // case 'I':
+    // value = serialInput.substring(1).toFloat();
+    //   Serial.print("Setting Ki to: ");
+    //   Serial.println(value);
+    //   chassis.SetMotorKi(value);
+    //   break;
+    // case 'D':
+    //   value = serialInput.substring(1).toFloat();
+    //   Serial.print("Setting Kd to: ");
+    //   Serial.println(value);
+    //   chassis.SetMotorKd(value);
+    //   break;
+    // case 'L': //target speed
+    //   value = serialInput.substring(1).toFloat();
+    //   Serial.print("Setting left target to: ");
+    //   Serial.println(value);
+    //   chassis.SetWheelSpeeds(value, 0);
+    //   break;
+    // case 'R': //target speed
+    //   value = serialInput.substring(1).toFloat();
+    //   Serial.print("Setting right target to: ");
+    //   Serial.println(value);
+    //   chassis.SetWheelSpeeds(0, value);
+    //   break;
   }
 
   serialInput = "";

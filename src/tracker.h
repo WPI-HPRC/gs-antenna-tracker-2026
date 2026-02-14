@@ -17,6 +17,9 @@ protected:
     void EnterCalibratingState(void);
     void EnterTrackingState(void);
 
+    bool CheckSerialInput(void);
+    void ParseSerialInput(void);
+
     // Enumerate tracker states
     enum TRACKER_STATE
     {
@@ -26,4 +29,4 @@ protected:
     };
 
     TRACKER_STATE trackerState = TRACKER_IDLE;
-}
+};
