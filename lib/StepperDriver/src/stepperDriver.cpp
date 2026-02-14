@@ -22,3 +22,10 @@ void StepperDriver::SetSpeed(float speed)
 {
     stepper.setSpeed(speed);
 }
+
+void StepperDriver::SetPID(float Kp_, float Ki_, float Kd_)
+{
+    Kp = Kp_;
+    Ki = Ki_;
+    Kd = Kd_;
+}

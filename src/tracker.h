@@ -5,6 +5,8 @@
 
 #pragma once // This replaces #ifndef...
 
+#include "chassis.h"
+
 class Tracker
 {
 public:

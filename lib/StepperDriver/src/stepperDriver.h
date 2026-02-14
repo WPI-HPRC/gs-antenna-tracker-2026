@@ -10,9 +10,18 @@ public:
     void InitializeStepperDriver(void);
     void SetSpeed(float speed);
 
+    void SetPID(float Kp_, float Ki_, float Kd_);
+
 protected:
     int dirPin;
     int stepPin;
+
+    float stepsPerDegree = -1;
+
+    // PID Tuning
+    float Kp;
+    float Ki; // integral term which we may or may not use
+    float Kd;
 
     AccelStepper stepper;
 };

@@ -6,6 +6,8 @@
 
 #include "tracker.h"
 
+Chassis chassis;
+
 void Tracker::InitializeTracker(void)
 {
 
@@ -13,17 +15,18 @@ void Tracker::InitializeTracker(void)
 
 void Tracker::EnterIdleState(void)
 {
-
+    chassis.Stop();
+    trackerState = TRACKER_IDLE;
 }
 
 void Tracker::EnterCalibratingState(void)
 {
-
+    trackerState = TRACKER_CALIBRATING;
 }
 
 void Tracker::EnterTrackingState(void)
 {
-
+    trackerState = TRACKER_TRACKING;
 }
 
 /**
@@ -42,7 +45,7 @@ void Tracker::TrackerLoop(void)
     }
     if (trackerState == TRACKER_TRACKING)
     {
-        
+        chassis.ChassisLoop();
     }
 
     // Checkers and Handlers
