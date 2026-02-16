@@ -45,7 +45,7 @@ void Tracker::TrackerLoop(void)
     }
     if (trackerState == TRACKER_TRACKING)
     {
-        chassis.ChassisLoop();
+        chassis.ChassisLoop(chassisPose, chassisTwist);
     }
 
     // Checkers and Handlers

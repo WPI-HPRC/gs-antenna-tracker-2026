@@ -7,6 +7,34 @@
 
 #include "chassis.h"
 
+/**
+ * Because it's declared static, we initialize Chassis::loopFlag here.
+ */
+uint8_t Chassis::loopFlag = 0;
+
+/**
+ * For taking snapshots and raising the flag.
+ */
+void Chassis::Timer4OverflowISRHandler(void) 
+{
+    loopFlag++;
+
+    // leftMotor.speed = leftMotor.CalcEncoderDelta();
+    // rightMotor.speed = rightMotor.CalcEncoderDelta();
+}
+
+/**
+ * ISR for timing. On Timer4 overflow, we take a 'snapshot' of the encoder counts 
+ * and raise a flag to let the program it is time to execute the PID calculations.
+ */
+ISR(TIMER4_OVF_vect)
+{
+   Chassis::Timer4OverflowISRHandler();
+}
+
+
+
+
 
 Chassis::Chassis()
     : azimuthDriver(AZ_STEP_PIN, AZ_DIR_PIN),
@@ -24,8 +52,8 @@ void Chassis::InitializeChassis()
 
 void Chassis::Stop()
 {
-    Twist zero = {0};
-    SetSpeed(zero);
+    azimuthDriver.SetSpeed(0);
+    elevationDriver.SetSpeed(0);
 }
 
 void Chassis::SetSpeed(Twist& twist)
@@ -46,8 +74,52 @@ Pose Chassis::GetError(Pose targetPose) {
     return error; // Azimuth error is shortened between -180 and 180 to prevent the tracker from going the long way around
 }
 
-bool Chassis::ChassisLoop(Pose&)
+void Chassis::UpdatePose(Pose& chassisPose)
 {
+    chassisPose.az = azimuthEncoder.ReadPosition();
+    chassisPose.el = elevationEncoder.ReadPosition();
+}
+
+void Chassis::UpdateTwist(Twist& chassisTwist)
+{
+    chassisTwist.azVel = azimuthEncoder.ReadVelocity();
+    chassisTwist.elVel = elevationEncoder.ReadVelocity();
+}
+
+bool Chassis::ChassisLoop(Pose& chassisPose, Twist& chassisTwist)
+{
+
+    // Below code isn't finished, but will allow ChassisLoop() to run in set intervals using a timer
+
+    bool retVal = false;
+
+    if(loopFlag)
+    {
+        if(loopFlag > 1) Serial.println("Missed an update in Robot::RobotLoop()!");
+
+#ifdef __LOOP_DEBUG__
+        Serial.print(millis());
+        Serial.print('\n');
+#endif
+
+        // motor updates
+        UpdateMotors();
+
+        /* Update the wheel velocity so it gets back to Robot. */
+        velocity = CalcOdomFromWheelMotion();
+
+        loopFlag = 0;
+
+        retVal = true;
+    }
+
+    return retVal;
+
+
+
+
+
+
     unsigned long now = millis();
     
     // PID interval is 20ms
@@ -63,7 +135,7 @@ bool Chassis::ChassisLoop(Pose&)
     while (currentAz < 0.0)    currentAz += 360.0;
 
     // get speed from PID
-    float speedAz = calculatePID(azAxis, currentAz, azTargetDeg, dt);
+    float speedAz = CalculatePID(azAxis, currentAz, azTargetDeg, dt);
     
     // set the stepper to the calculated speed
     azAxis.stepper->setSpeed(speedAz);
@@ -75,9 +147,13 @@ bool Chassis::ChassisLoop(Pose&)
 
     float currentEl = elAxis.stepper->currentPosition() / elAxis.stepsPerDegree;
 
-    float speedEl = calculatePID(elAxis, currentEl, elTargetDeg, dt);
+    float speedEl = CalculatePID(elAxis, currentEl, elTargetDeg, dt);
 
     elAxis.stepper->setSpeed(speedEl);
+
+    // Update data on position and angular velocity
+    UpdatePose(chassisPose);
+    UpdateTwist(chassisTwist);
 }
 
 // main pid loop, loosely based on https://ascendrobotics.gitbook.io/ascend/vex-robotics/coding/vexcode-pro/advanced/coding-pids/drive-pid-tutorial
@@ -85,7 +161,7 @@ float Chassis::CalculatePID(TrackerAxis &axis, float currentAngle, float targetA
     float error;
 
     if(axis.wrapsAround) {
-        error = getShortestError(currentAngle, targetAngle);
+        error = GetError(currentAngle, targetAngle);
     } else {
         error = targetAngle - currentAngle;
     }

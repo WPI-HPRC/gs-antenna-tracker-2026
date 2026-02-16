@@ -5,7 +5,7 @@
 
 #pragma once // This replaces #ifndef...
 
-#include "chassis.h"
+#include "..\lib\Chassis\src\chassis.h"
 
 class Tracker
 {
@@ -15,6 +15,9 @@ public:
     void TrackerLoop(void);
 
 protected:
+    Pose chassisPose;
+    Twist chassisTwist;
+
     void EnterIdleState(void);
     void EnterCalibratingState(void);
     void EnterTrackingState(void);
