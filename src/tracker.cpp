@@ -8,6 +8,11 @@
 
 Chassis chassis;
 
+Tracker::Tracker(void)
+{
+    trackerState = TRACKER_IDLE; // this block makes it build successfully
+}
+
 void Tracker::InitializeTracker(void)
 {
 

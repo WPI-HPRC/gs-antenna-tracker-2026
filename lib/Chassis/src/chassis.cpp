@@ -4,7 +4,6 @@
  * be directly controlled by tracker-control.cpp. This'll mostly just ensure desired
  * positioning variables are met using all the sensor data on the tracker's chassis.
  */
-
 #include "chassis.h"
 
 /**
@@ -26,6 +25,7 @@ void Chassis::Timer4OverflowISRHandler(void)
 /**
  * ISR for timing. On Timer4 overflow, we take a 'snapshot' of the encoder counts 
  * and raise a flag to let the program it is time to execute the PID calculations.
+ * it appears the teensy 3.2 may have a different timing system, might need to change this
  */
 ISR(TIMER4_OVF_vect)
 {
@@ -103,10 +103,10 @@ bool Chassis::ChassisLoop(Pose& chassisPose, Twist& chassisTwist)
 #endif
 
         // motor updates
-        UpdateMotors();
+        //UpdateMotors();
 
         /* Update the wheel velocity so it gets back to Robot. */
-        velocity = CalcOdomFromWheelMotion();
+        //velocity = CalcOdomFromWheelMotion();
 
         loopFlag = 0;
 
@@ -123,33 +123,15 @@ bool Chassis::ChassisLoop(Pose& chassisPose, Twist& chassisTwist)
     unsigned long now = millis();
     
     // PID interval is 20ms
-    if (now - lastTime < 20) return; 
+    if (now - lastTime < CONTROL_LOOP_PERIOD_MS) return false; 
 
     float dt = (now - lastTime) / 1000.0;
     lastTime = now;
 
-    // get current degree position
-    float currentAz = azAxis.stepper->currentPosition() / azAxis.stepsPerDegree;
-    // normalize degrees
-    while (currentAz >= 360.0) currentAz -= 360.0;
-    while (currentAz < 0.0)    currentAz += 360.0;
-
-    // get speed from PID
-    float speedAz = CalculatePID(azAxis, currentAz, azTargetDeg, dt);
-    
-    // set the stepper to the calculated speed
-    azAxis.stepper->setSpeed(speedAz);
-
-
-    // elevation should be limited so it doesn't go to any weird positions or collide with objects
-    if (elTargetDeg > elAxis.maxAngle) elTargetDeg = elAxis.maxAngle;
-    if (elTargetDeg < elAxis.minAngle) elTargetDeg = elAxis.minAngle;
-
-    float currentEl = elAxis.stepper->currentPosition() / elAxis.stepsPerDegree;
-
-    float speedEl = CalculatePID(elAxis, currentEl, elTargetDeg, dt);
-
-    elAxis.stepper->setSpeed(speedEl);
+    // get speed from PID and set it
+    Pose targetPose; // this should be the input pose for where we want it to go
+    Twist calcTwist = CalculatePID(targetPose, dt);
+    Chassis::SetSpeed(calcTwist);
 
     // Update data on position and angular velocity
     UpdatePose(chassisPose);
@@ -157,21 +139,21 @@ bool Chassis::ChassisLoop(Pose& chassisPose, Twist& chassisTwist)
 }
 
 // main pid loop, loosely based on https://ascendrobotics.gitbook.io/ascend/vex-robotics/coding/vexcode-pro/advanced/coding-pids/drive-pid-tutorial
-float Chassis::CalculatePID(TrackerAxis &axis, float currentAngle, float targetAngle, float dt) {
-    float error;
+Twist Chassis::CalculatePID(Pose targetAngle, float dt) {
+    Pose totalError = GetError(targetAngle);
+    Twist result;
 
-    if(axis.wrapsAround) {
-        error = GetError(currentAngle, targetAngle);
-    } else {
-        error = targetAngle - currentAngle;
-    }
+    float azP = azKp * totalError.az;
+    float azDerivative = totalError.az - azLastError;
+    float azD = azKd * azDerivative;
+    azLastError = totalError.az;
+    result.azVel = azP + azD;
 
-    float P = axis.Kp * error;
-    float derivative = error - axis.lastError;
-    float D = axis.Kd * derivative;
-    float velocity = P + D;
+    float elP = elKp * totalError.el;
+    float elDerivative = totalError.el - elLastError;
+    float elD = elKd * elDerivative;
+    elLastError = totalError.el;
+    result.elVel = elP + elD;
 
-    axis.lastError = error;
-
-    return velocity * axis.stepsPerDegree;
+    return result;
 }

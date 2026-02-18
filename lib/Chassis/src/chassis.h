@@ -47,7 +47,7 @@ public:
     void Stop(void);
     void SetSpeed(Twist&);
     Pose GetError(Pose targetPose);
-    float CalculatePID(TrackerAxis &axis, float currentAngle, float targetAngle, float dt);
+    Twist CalculatePID(Pose targetAngle, float dt);
     void UpdatePose(Pose& chassisPose);
     void UpdateTwist(Twist& chassisTwist);
 
@@ -63,10 +63,11 @@ protected:
     Encoder azimuthEncoder;
     Encoder elevationEncoder;
 
-    bool loopFlag = false;
+    //comment bool loopFlag = false;
 
     // Memory (Internal State)
-    float lastError;
+    float azLastError;
+    float elLastError;
     float integralSum; // integral sum which will only be used if we use the integral term
     unsigned long lastTime = 0;
 };

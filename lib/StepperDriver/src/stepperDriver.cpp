@@ -20,7 +20,7 @@ void StepperDriver::InitializeStepperDriver()
 
 void StepperDriver::SetSpeed(float speed)
 {
-    stepper.setSpeed(speed);
+    stepper.setSpeed(speed * stepsPerDegree);
 }
 
 void StepperDriver::SetPID(float Kp_, float Ki_, float Kd_)
