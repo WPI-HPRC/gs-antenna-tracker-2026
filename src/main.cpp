@@ -1,47 +1,10 @@
-/**
-#include <AccelStepper.h>
-#include "tracker.h"
-#include "tracker-control.h"
-
-const int AZ_STEP_PIN = 1;
-const int AZ_DIR_PIN  = 2;
-
-const int EL_STEP_PIN = 3;
-const int EL_DIR_PIN  = 4;
-
-// arduino accel stepper library which steps the motors for us and is very convenient
-// docs: https://hackaday.io/project/183279-accelstepper-the-missing-manual/details
-AccelStepper stepperAz(AccelStepper::DRIVER, AZ_STEP_PIN, AZ_DIR_PIN);
-// AccelStepper stepperEl(AccelStepper::DRIVER, EL_STEP_PIN, EL_DIR_PIN);
-
-void setup() {
-  // Initialize serial communication
-  Serial.begin(115200);
-  stepperAz.setMaxSpeed(6700); // more temporary numbers
-  stepperEl.setMaxSpeed(6700);
-  initTracker();
-}
-
-void loop() {
-  float targetAz = 45.0; // more random angles
-  float targetEl = 10.0;
-  runTrackerControl(targetAz, targetEl);
-
-  stepperAz.runSpeed(); // tell motors to go 
-  stepperEl.runSpeed();
-}
-
-*/
-
-
 #include <AccelStepper.h>
 
 // --- Configuration ---
-const int STEPS_PER_REV = 400; // Standard 1.8 degree motor
+const int STEPS_PER_REV = 1600; // Standard 1.8 degree motor
 const float MAX_RPM = 30.0;
 const float GEAR_REDUCTION = 10.0;
-const float MAX_STEPS_PER_SEC = (MAX_RPM * STEPS_PER_REV) / GEAR_REDUCTION / 60.0;
-
+const float MAX_STEPS_PER_SEC = (MAX_RPM * GEAR_REDUCTION * STEPS_PER_REV) / 60.0;
 // --- Azimuth Pin Definitions ---
 const int AZ_STEP_PIN = 12;
 const int AZ_DIR_PIN  = 9;
