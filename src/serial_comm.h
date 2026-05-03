@@ -1,97 +1,69 @@
-// /**
-//  * I just copied Lewin's code for this, it'll still be applicable and useful for debugging
-//  * and control since the tracker needs to be plugged into a laptop at all times anyways.
-//  * Not much needs to be added here I think, just change the functions and control stuff.
-//  */
+#ifndef __SERIAL_COMM_H
+#define __SERIAL_COMM_H
 
+#include <Arduino.h>
+#include "tracker.h"
 
+String serialInput;
+String data = serialInput.substring(2);
 
+bool Tracker::checkSerialInput(void)
+{
+  if(Serial.available())
+  {
+    char c = Serial.read();
+    char d = Serial.read(); 
+    serialInput += c;
+    if(c == '\n'&&d=='\n') return true;
+    Serial.println(serialInput);
+  }
 
-// /*
-//  * For managing input over the serial stream (USB for the 32U4).
-//  * 
-//  * Be sure to set your Serial Monitor to append a NEWLINE character to each line.
-//  * (See the dropdown near the bottom of the Serial Monitor.)
-//  * 
-//  * Format is a single letter, followed by a number. The number represents either
-//  * a target speed or a PID gain; see ParseSerialInput() below for what is what.
-//  * 
-//  * Examples:
-//  * 
-//  * Sending  L10    will set the target speed of the left wheel to 10
-//  * Sending  I1.2   will set the Ki term to 1.2
-//  * 
-//  * THIS CODE DOES NO ERROR CHECKING! 
-//  * You won't break anything if the format is wrong, but neither will it work.
-//  * 
-//  * Also, I didn't break it up into .h and .cpp files. You'll want to do that
-//  * if you incorporate this into other code.
-//  * 
-//  * If you want to plot on the Serial Plotter, you'll want to comment out all the 
-//  * Serial.print statements in the parsing function.
-//  */
+  return false;
+}
 
-// #ifndef __SERIAL_COMM_H
-// #define __SERIAL_COMM_H
+void Tracker::parseSerialInput(void)
+{
+  float value;
+  switch(serialInput[0])
+  {
+    case 'C': // Calibrate
+        enterCalibratingState();
+        break;
 
-// #include <Arduino.h>
-// #include "robot.h"
+    case 'I': // Idle
+        enterIdleState();
+        break;
 
-// String serialInput;
-// String serialInput2;
+    case 'T': // Tracking
+        enterTrackingState();
+        break;
 
-// bool Robot::CheckSerialInput(void)
-// {
-//   if(Serial.available())
-//   {
-//     char c = Serial.read();
-//     char d = Serial.read(); 
-//     serialInput += c;
-//     serialInput2 += d;
-//     if(c == '\n'&&d=='\n') return true;
-//   }
+    case 'M': // Manual
+        enterManualState();
+        break;
 
-//   return false;
-// }
+    case 'V': { // Controller Velocity Input, "V,0.500,-0.200"
+        int commaIndex = data.indexOf(',');
+            if (commaIndex != -1) {
+                float az = data.substring(0, commaIndex).toFloat();
+                float el = data.substring(commaIndex + 1).toFloat();
+                
+                if (trackerState == TRACKER_MANUAL) {
+                    chassis.setSpeed(az/10.0, el/10.0);
+                }
+            }
+        break;
+    }
 
-// void Robot::ParseSerialInput(void)
-// {
-//   float value;
-//   switch(serialInput[0])
-//   {
-//     case 'P':
-//       value = serialInput.substring(1).toFloat();
-//       Serial.print("Setting Kp to: ");
-//       Serial.println(value);
-//       chassis.SetMotorKp(value);
-//       break;
-//     case 'I':
-//     value = serialInput.substring(1).toFloat();
-//       Serial.print("Setting Ki to: ");
-//       Serial.println(value);
-//       chassis.SetMotorKi(value);
-//       break;
-//     case 'D':
-//       value = serialInput.substring(1).toFloat();
-//       Serial.print("Setting Kd to: ");
-//       Serial.println(value);
-//       chassis.SetMotorKd(value);
-//       break;
-//     case 'L': //target speed
-//       value = serialInput.substring(1).toFloat();
-//       Serial.print("Setting left target to: ");
-//       Serial.println(value);
-//       chassis.SetWheelSpeeds(value, 0);
-//       break;
-//     case 'R': //target speed
-//       value = serialInput.substring(1).toFloat();
-//       Serial.print("Setting right target to: ");
-//       Serial.println(value);
-//       chassis.SetWheelSpeeds(0, value);
-//       break;
-//   }
+    case 'S': // Controller State Input, "S,MANUAL" (State Change)
+        if (data == "MANUAL") enterManualState();
+        else if (data == "TRACKING") enterTrackingState();
+        else if (data == "IDLE") enterIdleState();
+        break;
 
-//   serialInput = "";
-// }
+  }
 
-// #endif
+  serialInput = "";
+}
+
+#endif

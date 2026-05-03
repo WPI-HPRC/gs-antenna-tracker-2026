@@ -1,29 +1,34 @@
-// /**
-//  * Holds all the function prototypes and variables related to tracker control and the state machine.
-//  * There should be no function bodies defined here, only variables and prototypes.
-//  */
+#pragma once
 
-// #pragma once // This replaces #ifndef...
+#include "chassis.h"
+#include <Arduino.h>
 
-// class Tracker
-// {
-// public:
-//     Tracker(void);
-//     void InitializeTracker(void);
-//     void TrackerLoop(void);
+class Tracker
+{
+public:
+    void initializeTracker(void);
+    void trackerLoop(void);
 
-// protected:
-//     void EnterIdleState(void);
-//     void EnterCalibratingState(void);
-//     void EnterTrackingState(void);
+protected:
+    Chassis chassis;
 
-//     // Enumerate tracker states
-//     enum TRACKER_STATE
-//     {
-//         TRACKER_IDLE,
-//         TRACKER_CALIBRATING,
-//         TRACKER_TRACKING
-//     };
+    void enterIdleState(void);
+    void enterCalibratingState(void);
+    void enterTrackingState(void);
+    void enterManualState(void);
 
-//     TRACKER_STATE trackerState = TRACKER_IDLE;
-// }
+    bool checkSerialInput(void);
+    void parseSerialInput(void);
+    void parseSerialCommand(String cmd);
+
+    // Enumerate tracker states
+    enum TRACKER_STATE
+    {
+        TRACKER_IDLE,
+        TRACKER_CALIBRATING,
+        TRACKER_TRACKING,
+        TRACKER_MANUAL
+    };
+
+    TRACKER_STATE trackerState = TRACKER_IDLE;
+};

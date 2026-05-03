@@ -23,7 +23,6 @@ const int EL_EN_PIN   = 11;
 class Chassis
 {
 public:
-    Chassis(void);
     void initializeChassis(void);
     bool chassisLoop(void);
 
