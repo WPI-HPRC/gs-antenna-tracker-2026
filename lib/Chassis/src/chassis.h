@@ -1,28 +1,54 @@
 #pragma once
-
+#include <AccelStepper.h>
+#include <Arduino.h>
+#include <math.h>
+#include <Encoder.h>
 #define PI 3.14159265
-
-// --- Configuration ---
-const int STEPS_PER_REV = 1600;
-const int AZ_GEAR_REDUCTION = 40;
-const int EL_GEAR_REDUCTION = 40;
-const int MAX_RPM = 1000; // Physical limit = 1500RPM, DONT APPROACH
-const int ACCELERATION = 50;
-const int PULSE_WIDTH = 10;
-
-// --- Azimuth Pin Definitions ---
-const int AZ_STEP_PIN = 12;
-const int AZ_DIR_PIN  = 9;
-const int AZ_EN_PIN   = 6;
-
-// --- Elevation Pin Definitions ---
-const int EL_STEP_PIN = 13;
-const int EL_DIR_PIN  = 10;
-const int EL_EN_PIN   = 11; 
 
 class Chassis
 {
+protected:
+    // --- Configuration ---
+    const int STEPS_PER_REV = 1600;
+    const int AZ_GEAR_REDUCTION = 40;
+    const int EL_GEAR_REDUCTION = 40;
+    const int MAX_RPM = 1000; // Physical limit = 1500RPM, DONT APPROACH
+    const int ACCELERATION = 50;
+    const int PULSE_WIDTH = 10;
+
+    // --- Azimuth Pin Definitions ---
+    const int AZ_STEP_PIN = 12;
+    const int AZ_DIR_PIN  = 9;
+    const int AZ_EN_PIN   = 6;
+
+    const int AZ_ALRM_PIN = 28;
+    const int AZ_ENCA_PIN = 33;
+    const int AZ_ENCB_PIN = 32;
+
+    // --- Elevation Pin Definitions ---
+    const int EL_STEP_PIN = 13;
+    const int EL_DIR_PIN  = 10;
+    const int EL_EN_PIN   = 11;
+    
+    const int EL_ALRM_PIN = 22;
+    const int EL_ENCA_PIN = 30;
+    const int EL_ENCB_PIN = 31;
+
+    // Stepper Drivers
+    AccelStepper azimuth;
+    AccelStepper elevation;
+    
+    // Encoders
+    Encoder azEncoder;
+    Encoder elEncoder;
+
+    // Calibration Parameters
+    bool azCalibrated = false;
+    bool elCalibrated = false;
+
 public:
+    Chassis();
+
     void initializeChassis(void);
     bool chassisLoop(void);
 

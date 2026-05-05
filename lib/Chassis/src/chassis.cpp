@@ -1,11 +1,12 @@
 #include "chassis.h"
-#include <AccelStepper.h>
-#include <math.h>
 
-// Initialize the stepper(s)
-// Interface type 1 means an external driver with Step and Direction pins
-AccelStepper azimuth(AccelStepper::DRIVER, AZ_STEP_PIN, AZ_DIR_PIN);
-AccelStepper elevation(AccelStepper::DRIVER, EL_STEP_PIN, EL_DIR_PIN);
+Chassis::Chassis()
+    : azimuth(AccelStepper::DRIVER, AZ_STEP_PIN, AZ_DIR_PIN),
+      elevation(AccelStepper::DRIVER, EL_STEP_PIN, EL_DIR_PIN),
+      azEncoder(AZ_ENCA_PIN, AZ_ENCB_PIN),
+      elEncoder(EL_ENCA_PIN, EL_ENCB_PIN)
+    {
+    }
 
 /// @brief Initializes chassis motors and drivers
 void Chassis::initializeChassis() {
@@ -14,6 +15,10 @@ void Chassis::initializeChassis() {
     pinMode(EL_EN_PIN, OUTPUT);
     digitalWrite(AZ_EN_PIN, LOW);
     digitalWrite(EL_EN_PIN, LOW);
+
+    // Setup alarm pins for read
+    pinMode(AZ_ALRM_PIN, INPUT);
+    pinMode(EL_ALRM_PIN, INPUT);
 
     // Configure Azimuth
     azimuth.setMaxSpeed(STEPS_PER_REV * MAX_RPM);

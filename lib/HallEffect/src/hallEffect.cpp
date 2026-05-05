@@ -1,9 +1,8 @@
 #include "hallEffect.h"
-#include <Arduino.h>
 
 /// @brief Creates HallEffect class
 /// @param pin Pin number for data to be read from
-HallEffect::HallEffect(int pin) {
+HallEffect::HallEffect(uint8_t pin) {
     pinNum = pin;
 }
 

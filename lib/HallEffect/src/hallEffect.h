@@ -1,10 +1,12 @@
+#include <Arduino.h>
+
 class HallEffect
 {
 public:
-    HallEffect(int pin);
+    HallEffect(uint8_t pin);
     void initializeHallEffect(void);
     bool readSensor(void);
     
 protected:
-    int pinNum;
+    uint8_t pinNum;
 };
