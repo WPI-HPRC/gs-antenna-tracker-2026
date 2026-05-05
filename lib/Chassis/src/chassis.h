@@ -1,8 +1,11 @@
 #pragma once
+
 #include <AccelStepper.h>
 #include <Arduino.h>
 #include <math.h>
 #include <Encoder.h>
+#include "hallEffect.h"
+
 #define PI 3.14159265
 
 class Chassis
@@ -17,40 +20,66 @@ protected:
     const int PULSE_WIDTH = 10;
 
     // --- Azimuth Pin Definitions ---
-    const int AZ_STEP_PIN = 12;
-    const int AZ_DIR_PIN  = 9;
-    const int AZ_EN_PIN   = 6;
+    const uint8_t AZ_STEP_PIN = 12;
+    const uint8_t AZ_DIR_PIN  = 9;
+    const uint8_t AZ_EN_PIN   = 6;
 
-    const int AZ_ALRM_PIN = 28;
-    const int AZ_ENCA_PIN = 33;
-    const int AZ_ENCB_PIN = 32;
+    const uint8_t AZ_ALRM_PIN = 28;
+    const uint8_t AZ_ENCA_PIN = 33;
+    const uint8_t AZ_ENCB_PIN = 32;
 
     // --- Elevation Pin Definitions ---
-    const int EL_STEP_PIN = 13;
-    const int EL_DIR_PIN  = 10;
-    const int EL_EN_PIN   = 11;
+    const uint8_t EL_STEP_PIN = 13;
+    const uint8_t EL_DIR_PIN  = 10;
+    const uint8_t EL_EN_PIN   = 11;
     
-    const int EL_ALRM_PIN = 22;
-    const int EL_ENCA_PIN = 30;
-    const int EL_ENCB_PIN = 31;
+    const uint8_t EL_ALRM_PIN = 22;
+    const uint8_t EL_ENCA_PIN = 30;
+    const uint8_t EL_ENCB_PIN = 31;
+
+    const uint8_t FRONT_HALL_PIN = 18; // TODO: DOUBLE CHECK THESE
+    const uint8_t REAR_HALL_PIN  = 19;
+
+    // --- Hall Effect / Encoder Params ---
+    const int32_t FRONT_ENCODER_COUNT = -999; // TODO: Update these
+    const int32_t REAR_ENCODER_COUNT = -999;
 
     // Stepper Drivers
-    AccelStepper azimuth;
-    AccelStepper elevation;
+    AccelStepper azMotor;
+    AccelStepper elMotor;
     
     // Encoders
     Encoder azEncoder;
     Encoder elEncoder;
 
+    // Hall Effect Sensors
+    HallEffect frontHall;
+    HallEffect rearHall;
+
     // Calibration Parameters
     bool azCalibrated = false;
     bool elCalibrated = false;
+
+    // Hall Effect Parameters
+    bool frontPrevDetected = false;
+    bool rearPrevDetected = false;
+
+    // Alarm Parameters
+    bool prevAzAlarm = false;
+    bool prevElAlarm = false;
+
+    bool prevAzEnState = false;
+    bool prevElEnState = false;
+
+    // Stepper Enable Parameters
+    bool azEnabled = true;
+    bool elEnabled = true;
 
 public:
     Chassis();
 
     void initializeChassis(void);
-    bool chassisLoop(void);
+    void chassisLoop(void);
 
     void setSpeed(float azSpeed, float elSpeed);
     void stop(bool az, bool el);
@@ -59,7 +88,24 @@ public:
     void setMaxSpeed(float azSpeed, float elSpeed);
     void setAccel(float azAccel, float elAccel);
 
+    
+
 protected:
+    // Checkers and Handlers
+
+    bool checkFrontHall(void);
+    void handleFrontHall(void);
+
+    bool checkRearHall(void);
+    void handleRearHall(void);
+
+    bool checkAzAlarm(void);
+    void handleAzAlarm(void);
+
+    bool checkElAlarm(void);
+    void handleElAlarm(void);
+
+
     // Helper Functions
 
     /// @brief Converts motor steps to output radians for azimuth axis
@@ -93,6 +139,5 @@ protected:
         float steps = rads / 2*PI * (STEPS_PER_REV * EL_GEAR_REDUCTION);
         return steps;
     }
-
 
 };

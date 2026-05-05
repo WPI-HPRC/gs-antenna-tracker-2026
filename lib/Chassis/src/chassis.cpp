@@ -1,12 +1,26 @@
 #include "chassis.h"
 
 Chassis::Chassis()
-    : azimuth(AccelStepper::DRIVER, AZ_STEP_PIN, AZ_DIR_PIN),
-      elevation(AccelStepper::DRIVER, EL_STEP_PIN, EL_DIR_PIN),
+    : azMotor(AccelStepper::DRIVER, AZ_STEP_PIN, AZ_DIR_PIN),
+      elMotor(AccelStepper::DRIVER, EL_STEP_PIN, EL_DIR_PIN),
       azEncoder(AZ_ENCA_PIN, AZ_ENCB_PIN),
-      elEncoder(EL_ENCA_PIN, EL_ENCB_PIN)
+      elEncoder(EL_ENCA_PIN, EL_ENCB_PIN),
+      frontHall(FRONT_HALL_PIN),
+      rearHall(REAR_HALL_PIN)
     {
     }
+
+/// @brief Updates and runs chassis functions
+void Chassis::chassisLoop() {
+    azMotor.runSpeed();
+    elMotor.runSpeed();
+
+    // Checkers and Handlers
+    if (checkAzAlarm()) handleAzAlarm();
+    if (checkElAlarm()) handleElAlarm();
+    if (checkFrontHall()) handleFrontHall();
+    if (checkRearHall()) handleRearHall();
+}
 
 /// @brief Initializes chassis motors and drivers
 void Chassis::initializeChassis() {
@@ -20,62 +34,159 @@ void Chassis::initializeChassis() {
     pinMode(AZ_ALRM_PIN, INPUT);
     pinMode(EL_ALRM_PIN, INPUT);
 
-    // Configure Azimuth
-    azimuth.setMaxSpeed(STEPS_PER_REV * MAX_RPM);
-    azimuth.setAcceleration(ACCELERATION * AZ_GEAR_REDUCTION);
-    azimuth.setMinPulseWidth(PULSE_WIDTH);
+    // Initialize Hall Effect Sensors
+    frontHall.initializeHallEffect();
+    rearHall.initializeHallEffect();
+
+    // Configure Azimuth Motor
+    azMotor.setMaxSpeed(STEPS_PER_REV * MAX_RPM);
+    azMotor.setAcceleration(ACCELERATION * AZ_GEAR_REDUCTION);
+    azMotor.setMinPulseWidth(PULSE_WIDTH);
 
     // Configure Elevation
-    elevation.setMaxSpeed(STEPS_PER_REV * MAX_RPM);
-    elevation.setAcceleration(ACCELERATION * EL_GEAR_REDUCTION);
-    elevation.setMinPulseWidth(PULSE_WIDTH);
-}
-
-/// @brief Updates and runs chassis functions
-/// @return Returns true if loop was successful
-bool Chassis::chassisLoop() {
-    azimuth.runSpeed();
-    elevation.runSpeed();
-
-    return true;
+    elMotor.setMaxSpeed(STEPS_PER_REV * MAX_RPM);
+    elMotor.setAcceleration(ACCELERATION * EL_GEAR_REDUCTION);
+    elMotor.setMinPulseWidth(PULSE_WIDTH);
 }
 
 /// @brief Sets motor run speeds for next chassis update
 /// @param azSpeed Azimuth rotation speed [rad/s]
 /// @param elSpeed Elevation rotation speed [rad/s]
 void Chassis::setSpeed(float azSpeed, float elSpeed) {
-    azimuth.setSpeed(azRadToStep(azSpeed));
-    elevation.setSpeed(elRadToStep(elSpeed));
+    azMotor.setSpeed(azRadToStep(azSpeed));
+    elMotor.setSpeed(elRadToStep(elSpeed));
 }
 
 /// @brief Stops motors
 /// @param az Stops azimuth motor if true
 /// @param el Stops elevation motor if true
 void Chassis::stop(bool az, bool el) {
-    if (az) { azimuth.setSpeed(0); azimuth.runSpeed(); };
-    if (el) { elevation.setSpeed(0); elevation.runSpeed(); };
+    if (az) { azMotor.setSpeed(0); azMotor.runSpeed(); };
+    if (el) { elMotor.setSpeed(0); elMotor.runSpeed(); };
 }
 
 /// @brief Enables or frees motors
-/// @param az Enables azimuth if boolean is true, free otherwise
-/// @param el Enables elevation if boolean is true, free otherwise
+/// @param az Enables azimuth motor if boolean is true, free otherwise
+/// @param el Enables elevation motor if boolean is true, free otherwise
 void Chassis::enable(bool az, bool el) {
     digitalWrite(AZ_EN_PIN, az ? LOW : HIGH);
     digitalWrite(EL_EN_PIN, el ? LOW : HIGH);
+
+    azEnabled = az;
+    elEnabled = el;
+
+    prevAzEnState = az;
+    prevElEnState = el;
 }
 
 /// @brief Sets max speed of motors
 /// @param azSpeed Azimuth axis max speed [rad/s]
 /// @param elSpeed Elevation axis max speed [rad/s]
 void Chassis::setMaxSpeed(float azSpeed, float elSpeed) {
-    azimuth.setMaxSpeed(azRadToStep(azSpeed));
-    elevation.setMaxSpeed(elRadToStep(elSpeed));
+    azMotor.setMaxSpeed(azRadToStep(azSpeed));
+    elMotor.setMaxSpeed(elRadToStep(elSpeed));
 }
 
 /// @brief Sets motor acceleration
 /// @param azAccel Azimuth axis max acceleration [rad/s^2]
 /// @param elAccel Elevation axis max acceleration [rad/s^2]
 void Chassis::setAccel(float azAccel, float elAccel) {
-    azimuth.setAcceleration(azRadToStep(azAccel));
-    elevation.setAcceleration(elRadToStep(elAccel));
+    azMotor.setAcceleration(azRadToStep(azAccel));
+    elMotor.setAcceleration(elRadToStep(elAccel));
+}
+
+/// @brief Checks if the front hall effect sensor was triggered
+/// @return Returns true once if detected
+bool Chassis::checkFrontHall() {
+    if (frontHall.readSensor() && !frontPrevDetected) {
+        frontPrevDetected = true;
+        return true;
+    }
+
+    if (!frontHall.readSensor()) {
+        frontPrevDetected = false;
+    }
+
+    return false;
+}
+
+/// @brief Updates encoder count to match front hall
+void Chassis::handleFrontHall() {
+    elEncoder.write(FRONT_ENCODER_COUNT);
+}
+
+/// @brief Checks if the front hall effect sensor was triggered
+/// @return Returns true once if detected
+bool Chassis::checkRearHall() {
+    if (rearHall.readSensor() && !rearPrevDetected) {
+        rearPrevDetected = true;
+        return true;
+    }
+
+    if (!rearHall.readSensor()) {
+        rearPrevDetected = false;
+    }
+
+    return false;
+}
+
+/// @brief Updates encoder count to match rear hall
+void Chassis::handleRearHall() {
+    elEncoder.write(REAR_ENCODER_COUNT);
+}
+
+/// @brief Checks if the azimuth alarm is on
+/// @return Returns true whenever there is a change in azimuth alarm state
+bool Chassis::checkAzAlarm() {
+    if (digitalRead(AZ_ALRM_PIN) && !prevAzAlarm) {
+        prevAzAlarm = true;
+        prevAzEnState = azEnabled;
+        return true;
+    }
+
+    if (!digitalRead(AZ_ALRM_PIN) && prevAzAlarm) {
+        prevAzAlarm = false;
+        return true;
+    }
+
+    return false;
+}
+
+/// @brief Disables azimuth motor to handle alarm
+void Chassis::handleAzAlarm() {
+    if (prevAzAlarm) {
+        digitalWrite(AZ_EN_PIN, HIGH);
+        azEnabled = false;
+    } else {
+        digitalWrite(AZ_EN_PIN, prevAzEnState ? LOW : HIGH);
+        azEnabled = prevAzEnState;
+    }
+}
+
+/// @brief Checks if the elevation alarm is on
+/// @return Returns true whenever there is a change in elevation alarm state
+bool Chassis::checkElAlarm() {
+    if (digitalRead(EL_ALRM_PIN) && !prevElAlarm) {
+        prevElAlarm = true;
+        prevElEnState = elEnabled;
+        return true;
+    }
+
+    if (!digitalRead(EL_ALRM_PIN) && prevElAlarm) {
+        prevElAlarm = false;
+        return true;
+    }
+
+    return false;
+}
+
+/// @brief Disables elevation motor to handle alarm
+void Chassis::handleElAlarm() {
+    if (prevElAlarm) {
+        digitalWrite(EL_EN_PIN, HIGH);
+        elEnabled = false;
+    } else {
+        digitalWrite(EL_EN_PIN, prevElEnState ? LOW : HIGH);
+        elEnabled = prevElEnState;
+    }
 }

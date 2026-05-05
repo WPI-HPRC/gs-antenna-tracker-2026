@@ -11,6 +11,7 @@ void Tracker::trackerLoop(void)
 
     chassis.chassisLoop();
 
+    
     if(trackerState == TRACKER_IDLE) {
         
     }
@@ -26,11 +27,6 @@ void Tracker::trackerLoop(void)
     if (trackerState == TRACKER_MANUAL) {
 
     }
-
-
-
-    // Checkers and Handlers
-    // if(checkHallEffect()) handleHallEffect();
 }
 
 void Tracker::enterIdleState(void) {
