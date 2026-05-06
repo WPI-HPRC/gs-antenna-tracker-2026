@@ -6,8 +6,6 @@
 #include <Encoder.h>
 #include "hallEffect.h"
 
-#define PI 3.14159265
-
 class Chassis
 {
 protected:
@@ -45,16 +43,16 @@ protected:
     const int32_t REAR_ENCODER_COUNT = -999;
 
     // Stepper Drivers
-    AccelStepper azMotor;
-    AccelStepper elMotor;
+    AccelStepper* azMotor = nullptr;
+    AccelStepper* elMotor = nullptr;
     
     // Encoders
-    Encoder azEncoder;
-    Encoder elEncoder;
+    Encoder* azEncoder = nullptr;
+    Encoder* elEncoder = nullptr;
 
     // Hall Effect Sensors
-    HallEffect frontHall;
-    HallEffect rearHall;
+    HallEffect* frontHall = nullptr;
+    HallEffect* rearHall = nullptr;
 
     // Calibration Parameters
     bool azCalibrated = false;
@@ -76,8 +74,6 @@ protected:
     bool elEnabled = true;
 
 public:
-    Chassis();
-
     void initializeChassis(void);
     void chassisLoop(void);
 
@@ -87,8 +83,6 @@ public:
     
     void setMaxSpeed(float azSpeed, float elSpeed);
     void setAccel(float azAccel, float elAccel);
-
-    
 
 protected:
     // Checkers and Handlers
@@ -112,7 +106,7 @@ protected:
     /// @param steps Number of motor steps
     /// @return Azimuth radians
     float azStepToRad(float steps) {
-        float rads = steps / (STEPS_PER_REV * AZ_GEAR_REDUCTION) * 2*PI;
+        float rads = steps / (STEPS_PER_REV * AZ_GEAR_REDUCTION) * (2*PI);
         return rads;
     }
 
@@ -120,7 +114,7 @@ protected:
     /// @param steps Number of motor steps
     /// @return Elevation radians
     float elStepToRad(float steps) {
-        float rads = steps / (STEPS_PER_REV * EL_GEAR_REDUCTION) * 2*PI;
+        float rads = steps / (STEPS_PER_REV * EL_GEAR_REDUCTION) * (2*PI);
         return rads;
     }
     
@@ -128,7 +122,7 @@ protected:
     /// @param rads Number of radians
     /// @return Azimuth motor steps
     float azRadToStep(float rads) {
-        float steps = rads / 2*PI * (STEPS_PER_REV * AZ_GEAR_REDUCTION);
+        float steps = rads / (2*PI) * (STEPS_PER_REV * AZ_GEAR_REDUCTION);
         return steps;
     }
 
@@ -136,7 +130,7 @@ protected:
     /// @param rads Number of radians
     /// @return Elevation motor steps
     float elRadToStep(float rads) {
-        float steps = rads / 2*PI * (STEPS_PER_REV * EL_GEAR_REDUCTION);
+        float steps = rads / (2*PI) * (STEPS_PER_REV * EL_GEAR_REDUCTION);
         return steps;
     }
 

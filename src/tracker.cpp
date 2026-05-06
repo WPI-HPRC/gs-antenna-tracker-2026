@@ -1,16 +1,18 @@
 #include "tracker.h"
 #include "serial_comm.h"
 
-void Tracker::initializeTracker(void) {
+void Tracker::initializeTracker() {
     chassis.initializeChassis();
+    Serial.println("Tracker Initialized");
 }
 
-void Tracker::trackerLoop(void)
+void Tracker::trackerLoop()
 {
     if (checkSerialInput() ) { parseSerialInput(); }
 
     chassis.chassisLoop();
 
+    enterIdleState();
     
     if(trackerState == TRACKER_IDLE) {
         
@@ -29,31 +31,31 @@ void Tracker::trackerLoop(void)
     }
 }
 
-void Tracker::enterIdleState(void) {
+void Tracker::enterIdleState() {
     trackerState = TRACKER_IDLE;
-    Serial.print("ENTERING IDLE STATE");
+    Serial.println("ENTERING IDLE STATE");
 
     chassis.stop(true, true);
     chassis.enable(false, false);
 }
 
-void Tracker::enterCalibratingState(void) {
+void Tracker::enterCalibratingState() {
     trackerState = TRACKER_CALIBRATING;
-    Serial.println("ENTERIND CALIBRATING STATE");
+    Serial.println("ENTERING CALIBRATING STATE");
 
     chassis.enable(true, true);
 }
 
-void Tracker::enterTrackingState(void) {
+void Tracker::enterTrackingState() {
     trackerState = TRACKER_TRACKING;
-    Serial.println("ENTERIND TRACKING STATE");
+    Serial.println("ENTERING TRACKING STATE");
 
     chassis.enable(true, true);
 }
 
-void Tracker::enterManualState(void) {
+void Tracker::enterManualState() {
     trackerState = TRACKER_MANUAL;
-    Serial.println("ENTERIND MANUAL STATE");
+    Serial.println("ENTERING MANUAL STATE");
 
     chassis.enable(true, true);
 }

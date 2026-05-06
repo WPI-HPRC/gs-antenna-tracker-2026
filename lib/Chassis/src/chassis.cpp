@@ -1,19 +1,9 @@
 #include "chassis.h"
 
-Chassis::Chassis()
-    : azMotor(AccelStepper::DRIVER, AZ_STEP_PIN, AZ_DIR_PIN),
-      elMotor(AccelStepper::DRIVER, EL_STEP_PIN, EL_DIR_PIN),
-      azEncoder(AZ_ENCA_PIN, AZ_ENCB_PIN),
-      elEncoder(EL_ENCA_PIN, EL_ENCB_PIN),
-      frontHall(FRONT_HALL_PIN),
-      rearHall(REAR_HALL_PIN)
-    {
-    }
-
 /// @brief Updates and runs chassis functions
 void Chassis::chassisLoop() {
-    azMotor.runSpeed();
-    elMotor.runSpeed();
+    azMotor->runSpeed();
+    elMotor->runSpeed();
 
     // Checkers and Handlers
     if (checkAzAlarm()) handleAzAlarm();
@@ -24,45 +14,52 @@ void Chassis::chassisLoop() {
 
 /// @brief Initializes chassis motors and drivers
 void Chassis::initializeChassis() {
-    // Setup enable pins and set to low (Enabled)
+    azMotor = new AccelStepper(AccelStepper::DRIVER, AZ_STEP_PIN, AZ_DIR_PIN);
+    elMotor = new AccelStepper(AccelStepper::DRIVER, EL_STEP_PIN, EL_DIR_PIN);
+    azEncoder = new Encoder(AZ_ENCA_PIN, AZ_ENCB_PIN);
+    elEncoder = new Encoder(EL_ENCA_PIN, EL_ENCB_PIN);
+    frontHall = new HallEffect(FRONT_HALL_PIN);
+    rearHall = new HallEffect(REAR_HALL_PIN);
+
+    // Setup enable pins and set to high (Disabled)
     pinMode(AZ_EN_PIN, OUTPUT);
     pinMode(EL_EN_PIN, OUTPUT);
-    digitalWrite(AZ_EN_PIN, LOW);
-    digitalWrite(EL_EN_PIN, LOW);
+    digitalWrite(AZ_EN_PIN, HIGH);
+    digitalWrite(EL_EN_PIN, HIGH);
 
     // Setup alarm pins for read
     pinMode(AZ_ALRM_PIN, INPUT);
     pinMode(EL_ALRM_PIN, INPUT);
 
     // Initialize Hall Effect Sensors
-    frontHall.initializeHallEffect();
-    rearHall.initializeHallEffect();
+    frontHall->initializeHallEffect();
+    rearHall->initializeHallEffect();
 
     // Configure Azimuth Motor
-    azMotor.setMaxSpeed(STEPS_PER_REV * MAX_RPM);
-    azMotor.setAcceleration(ACCELERATION * AZ_GEAR_REDUCTION);
-    azMotor.setMinPulseWidth(PULSE_WIDTH);
+    azMotor->setMaxSpeed(STEPS_PER_REV * MAX_RPM / 60);
+    azMotor->setAcceleration(ACCELERATION * AZ_GEAR_REDUCTION);
+    azMotor->setMinPulseWidth(PULSE_WIDTH);
 
     // Configure Elevation
-    elMotor.setMaxSpeed(STEPS_PER_REV * MAX_RPM);
-    elMotor.setAcceleration(ACCELERATION * EL_GEAR_REDUCTION);
-    elMotor.setMinPulseWidth(PULSE_WIDTH);
+    elMotor->setMaxSpeed(STEPS_PER_REV * MAX_RPM / 60);
+    elMotor->setAcceleration(ACCELERATION * EL_GEAR_REDUCTION);
+    elMotor->setMinPulseWidth(PULSE_WIDTH);
 }
 
 /// @brief Sets motor run speeds for next chassis update
 /// @param azSpeed Azimuth rotation speed [rad/s]
 /// @param elSpeed Elevation rotation speed [rad/s]
 void Chassis::setSpeed(float azSpeed, float elSpeed) {
-    azMotor.setSpeed(azRadToStep(azSpeed));
-    elMotor.setSpeed(elRadToStep(elSpeed));
+    azMotor->setSpeed(azRadToStep(azSpeed));
+    elMotor->setSpeed(elRadToStep(elSpeed));
 }
 
 /// @brief Stops motors
 /// @param az Stops azimuth motor if true
 /// @param el Stops elevation motor if true
 void Chassis::stop(bool az, bool el) {
-    if (az) { azMotor.setSpeed(0); azMotor.runSpeed(); };
-    if (el) { elMotor.setSpeed(0); elMotor.runSpeed(); };
+    if (az) { azMotor->setSpeed(0); azMotor->runSpeed(); };
+    if (el) { elMotor->setSpeed(0); elMotor->runSpeed(); };
 }
 
 /// @brief Enables or frees motors
@@ -83,27 +80,27 @@ void Chassis::enable(bool az, bool el) {
 /// @param azSpeed Azimuth axis max speed [rad/s]
 /// @param elSpeed Elevation axis max speed [rad/s]
 void Chassis::setMaxSpeed(float azSpeed, float elSpeed) {
-    azMotor.setMaxSpeed(azRadToStep(azSpeed));
-    elMotor.setMaxSpeed(elRadToStep(elSpeed));
+    azMotor->setMaxSpeed(azRadToStep(azSpeed));
+    elMotor->setMaxSpeed(elRadToStep(elSpeed));
 }
 
 /// @brief Sets motor acceleration
 /// @param azAccel Azimuth axis max acceleration [rad/s^2]
 /// @param elAccel Elevation axis max acceleration [rad/s^2]
 void Chassis::setAccel(float azAccel, float elAccel) {
-    azMotor.setAcceleration(azRadToStep(azAccel));
-    elMotor.setAcceleration(elRadToStep(elAccel));
+    azMotor->setAcceleration(azRadToStep(azAccel));
+    elMotor->setAcceleration(elRadToStep(elAccel));
 }
 
 /// @brief Checks if the front hall effect sensor was triggered
 /// @return Returns true once if detected
 bool Chassis::checkFrontHall() {
-    if (frontHall.readSensor() && !frontPrevDetected) {
+    if (frontHall->readSensor() && !frontPrevDetected) {
         frontPrevDetected = true;
         return true;
     }
 
-    if (!frontHall.readSensor()) {
+    if (!frontHall->readSensor()) {
         frontPrevDetected = false;
     }
 
@@ -112,18 +109,18 @@ bool Chassis::checkFrontHall() {
 
 /// @brief Updates encoder count to match front hall
 void Chassis::handleFrontHall() {
-    elEncoder.write(FRONT_ENCODER_COUNT);
+    elEncoder->write(FRONT_ENCODER_COUNT);
 }
 
 /// @brief Checks if the front hall effect sensor was triggered
 /// @return Returns true once if detected
 bool Chassis::checkRearHall() {
-    if (rearHall.readSensor() && !rearPrevDetected) {
+    if (rearHall->readSensor() && !rearPrevDetected) {
         rearPrevDetected = true;
         return true;
     }
 
-    if (!rearHall.readSensor()) {
+    if (!rearHall->readSensor()) {
         rearPrevDetected = false;
     }
 
@@ -132,7 +129,7 @@ bool Chassis::checkRearHall() {
 
 /// @brief Updates encoder count to match rear hall
 void Chassis::handleRearHall() {
-    elEncoder.write(REAR_ENCODER_COUNT);
+    elEncoder->write(REAR_ENCODER_COUNT);
 }
 
 /// @brief Checks if the azimuth alarm is on

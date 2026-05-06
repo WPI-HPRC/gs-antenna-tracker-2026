@@ -23,7 +23,6 @@ bool Tracker::checkSerialInput(void)
 
 void Tracker::parseSerialInput(void)
 {
-  float value;
   switch(serialInput[0])
   {
     case 'C': // Calibrate
