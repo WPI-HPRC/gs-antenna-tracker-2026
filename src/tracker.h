@@ -1,29 +1,43 @@
-// /**
-//  * Holds all the function prototypes and variables related to tracker control and the state machine.
-//  * There should be no function bodies defined here, only variables and prototypes.
-//  */
+#pragma once
 
-// #pragma once // This replaces #ifndef...
+#include <AccelStepper.h>
 
-// class Tracker
-// {
-// public:
-//     Tracker(void);
-//     void InitializeTracker(void);
-//     void TrackerLoop(void);
+class Tracker
+{
+protected:
+    // --- Configuration ---
+    const int STEPS_PER_REV = 1600; // Standard 1.8 degree motor
+    const float MAX_RPM = 15.0;
+    const float GEAR_REDUCTION = 10.0;
+    const float MAX_STEPS_PER_SEC = (MAX_RPM * STEPS_PER_REV) * GEAR_REDUCTION / 60;
 
-// protected:
-//     void EnterIdleState(void);
-//     void EnterCalibratingState(void);
-//     void EnterTrackingState(void);
+    // --- Azimuth Pin Definitions ---
+    const int AZ_STEP_PIN = 12;
+    const int AZ_DIR_PIN  = 9;
+    const int AZ_EN_PIN   = 6; // "Free motor" pin (Enable)
 
-//     // Enumerate tracker states
-//     enum TRACKER_STATE
-//     {
-//         TRACKER_IDLE,
-//         TRACKER_CALIBRATING,
-//         TRACKER_TRACKING
-//     };
+    bool motorsEnabled = true;
 
-//     TRACKER_STATE trackerState = TRACKER_IDLE;
-// }
+    AccelStepper* azimuth;
+
+public:
+    void initializeTracker(void);
+    void trackerLoop(void);
+
+protected:
+    void enterIdleState(void);
+    void enterTrackingState(void);
+
+    bool checkSerialInput(void);
+    void parseSerialInput(void);
+
+    // Enumerate tracker states
+    enum TRACKER_STATE
+    {
+        TRACKER_IDLE,
+        TRACKER_CALIBRATING,
+        TRACKER_TRACKING
+    };
+
+    TRACKER_STATE trackerState = TRACKER_IDLE;
+};
