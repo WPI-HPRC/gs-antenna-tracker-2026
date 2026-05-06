@@ -7,7 +7,7 @@ class Tracker
 protected:
     // --- Configuration ---
     const int STEPS_PER_REV = 1600; // Standard 1.8 degree motor
-    const float MAX_RPM = 15.0;
+    const float MAX_RPM = 60.0;
     const float GEAR_REDUCTION = 10.0;
     const float MAX_STEPS_PER_SEC = (MAX_RPM * STEPS_PER_REV) * GEAR_REDUCTION / 60;
 
@@ -16,9 +16,12 @@ protected:
     const int AZ_DIR_PIN  = 9;
     const int AZ_EN_PIN   = 6; // "Free motor" pin (Enable)
 
-    bool motorsEnabled = true;
+    bool motorsEnabled = false; // Start with motors disabled for safety
 
     AccelStepper* azimuth;
+
+    String serialInput;
+    String data;
 
 public:
     void initializeTracker(void);

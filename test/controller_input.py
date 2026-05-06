@@ -5,7 +5,7 @@ import time
 # --- Settings ---
 SERIAL_PORT = 'COM3'  # Update this to your verified port
 BAUD_RATE = 115200
-DEADZONE = 0.15 # Pro Controllers sometimes have slight drift; 0.15 is safer
+DEADZONE = 0.1 # Pro Controllers sometimes have slight drift; 0.15 is safer
 
 # Initialize Serial and Pygame
 try:
@@ -47,8 +47,8 @@ try:
         # Axis 2: Right Stick X (Azimuth)
         # Axis 3: Right Stick Y (Elevation)
         
-        az_input = controller.get_axis(2)  
-        el_input = -controller.get_axis(3) # Inverted so pushing up is positive elevation
+        az_input = -controller.get_axis(0)  
+        el_input = -controller.get_axis(1) # Inverted so pushing up is positive elevation
 
         # Apply Deadzone
         if abs(az_input) < DEADZONE: az_input = 0
