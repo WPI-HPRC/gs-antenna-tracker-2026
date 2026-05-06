@@ -3,22 +3,22 @@
 #include "tracker.h"
 
 bool Tracker::checkSerialInput() {
-    // Use while instead of if to clear the buffer faster
-    while(Serial.available() > 0) {
+    bool messageReceived = false;
+    // Process ALL waiting bytes in the buffer
+    while (Serial.available() > 0) {
         char c = Serial.read();
-        
-        if(c == '\n') {
-        // Message is complete! Now prepare the data string.
+        if (c == '\n') {
             if (serialInput.length() >= 2) {
-                data = serialInput.substring(2); 
+                data = serialInput.substring(2);
             }
-            return true; 
+            messageReceived = true; 
+            // Don't 'return true' here; let it finish clearing the buffer 
+            // if there's a second message waiting
         } else {
-        serialInput += c;
+            serialInput += c;
         }
     }
-
-    return false;
+    return messageReceived;
 }
 
 void Tracker::parseSerialInput()
@@ -33,8 +33,8 @@ void Tracker::parseSerialInput()
             float az = data.substring(0, commaIndex).toFloat();
             
             // Only move if we are in a state that allows manual control
-            if (trackerState == TRACKER_TRACKING) {
-                azimuth->setSpeed(az * MAX_STEPS_PER_SEC);
+            if (trackerState == TRACKER_REMOTE) {
+                chassis->setSpeed(az, 0);
             }
         }
         break;
@@ -42,7 +42,7 @@ void Tracker::parseSerialInput()
 
     case 'S': // State Input "S,TRACKING"
         data.trim(); // Clean up hidden \r or spaces
-        if (data == "TRACKING") enterTrackingState();
+        if (data == "REMOTE") enterRemoteState();
         else if (data == "IDLE") enterIdleState();
         break;
   }

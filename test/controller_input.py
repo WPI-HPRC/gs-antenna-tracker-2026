@@ -67,7 +67,7 @@ try:
         if controller.get_button(1):   # 'A' Button
             command = "S,IDLE\n"
         elif controller.get_button(0): # 'B' Button
-            command = "S,TRACKING\n"
+            command = "S,REMOTE\n"
 
         # Send to Teensy
         ser.write(command.encode())
@@ -79,7 +79,7 @@ try:
             line = ser.readline().decode('utf-8', errors='ignore').strip()
             print(f"Teensy: {line}")
         
-        time.sleep(0.02) # 50Hz
+        time.sleep(0.05) # 50Hz
 
 except KeyboardInterrupt:
     ser.close()
