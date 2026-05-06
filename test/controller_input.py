@@ -3,21 +3,25 @@ import serial
 import time
 
 # --- Settings ---
-SERIAL_PORT = 'COM3'  # Update this to your verified port
+SERIAL_PORT = 'COM3' 
 BAUD_RATE = 115200
-DEADZONE = 0.1 # Pro Controllers sometimes have slight drift; 0.15 is safer
+DEADZONE = 0.12  # Slightly wider for better centering
+UPDATE_RATE = 0.05 # 20Hz is plenty (0.05s) and much more stable for Serial
 
-# Initialize Serial and Pygame
+# Initialize Serial with write timeouts
 try:
-    ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=0.1)
+    ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=0.05, write_timeout=0.05)
+    # Important for Teensy/Windows handshake
+    ser.dtr = True
+    ser.rts = True
 except Exception as e:
-    print(f"Serial Error: {e}. Is the VS Code Serial Monitor closed?")
+    print(f"Serial Error: {e}. Ensure VS Code Monitor is CLOSED.")
     exit()
 
 pygame.init()
 pygame.joystick.init()
 
-# Find the Pro Controller specifically
+# Find the Pro Controller
 controller = None
 for i in range(pygame.joystick.get_count()):
     js = pygame.joystick.Joystick(i)
@@ -28,12 +32,17 @@ for i in range(pygame.joystick.get_count()):
         break
 
 if not controller:
-    print("Nintendo Pro Controller not found! Using first available controller.")
+    print("Nintendo Pro Controller not found! Using first available.")
     if pygame.joystick.get_count() > 0:
         controller = pygame.joystick.Joystick(0)
         controller.init()
     else:
         exit()
+
+# State tracking to prevent serial flooding
+last_az = 0.0
+last_el = 0.0
+last_state_cmd = ""
 
 print(f"Bridge Active. Sending data to {SERIAL_PORT}...")
 
@@ -41,45 +50,55 @@ try:
     while True:
         pygame.event.pump()
 
-        # --- Axis Mapping for Nintendo Pro Controller ---
-        # Axis 0: Left Stick X
-        # Axis 1: Left Stick Y
-        # Axis 2: Right Stick X (Azimuth)
-        # Axis 3: Right Stick Y (Elevation)
-        
+        # 1. Axis Input
         az_input = -controller.get_axis(0)  
-        el_input = -controller.get_axis(1) # Inverted so pushing up is positive elevation
+        el_input = -controller.get_axis(1) 
 
-        # Apply Deadzone
+        # 2. Apply Deadzone
         if abs(az_input) < DEADZONE: az_input = 0
         if abs(el_input) < DEADZONE: el_input = 0
 
-        # Scale to Radians/sec
         az_speed = az_input * 0.8
         el_speed = el_input * 0.8
 
-        # --- Button Mapping for Nintendo Pro Controller ---
-        # Note: Pro Controller buttons are often mapped differently than Xbox
-        # B = 0, A = 1, Y = 2, X = 3
-        
-        command = f"V,{az_speed:.3f},{el_speed:.3f}\n"
-        
-        if controller.get_button(1):   # 'A' Button
-            command = "S,IDLE\n"
-        elif controller.get_button(0): # 'B' Button
-            command = "S,REMOTE\n"
+        # 3. Check for State Buttons (A/B)
+        # We only want to send these ONCE per press
+        current_command = None
+        if controller.get_button(1):   # 'A' Button -> IDLE
+            if last_state_cmd != "IDLE":
+                current_command = "S,IDLE\n"
+                last_state_cmd = "IDLE"
+        elif controller.get_button(0): # 'B' Button -> REMOTE
+            if last_state_cmd != "REMOTE":
+                current_command = "S,REMOTE\n"
+                last_state_cmd = "REMOTE"
+        else:
+            # If no button is pressed, we allow velocity updates
+            # Only send V if the stick has moved more than 1% to save bandwidth
+            if abs(az_input - last_az) > 0.01 or abs(el_input - last_el) > 0.01:
+                current_command = f"V,{az_speed:.3f},{el_speed:.3f}\n"
+                last_az = az_input
+                last_el = el_input
 
-        # Send to Teensy
-        ser.write(command.encode())
+        # 4. Attempt to Write
+        if current_command:
+            try:
+                ser.write(current_command.encode())
+                print(f"Outgoing: {current_command.strip()}")
+            except serial.SerialTimeoutException:
+                print("TX Timeout: Teensy is busy/buffer full")
+            except Exception as e:
+                print(f"Write Error: {e}")
 
-        # Debugging: Print outgoing command and any incoming Teensy messages
-        print(f"Outgoing: {command.strip()}")
-        
+        # 5. Non-blocking Read from Teensy
         if ser.in_waiting > 0:
-            line = ser.readline().decode('utf-8', errors='ignore').strip()
-            print(f"Teensy: {line}")
+            try:
+                line = ser.readline().decode('utf-8', errors='ignore').strip()
+                if line: print(f"Teensy: {line}")
+            except:
+                pass
         
-        time.sleep(0.05) # 50Hz
+        time.sleep(UPDATE_RATE)
 
 except KeyboardInterrupt:
     ser.close()

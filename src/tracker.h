@@ -20,6 +20,8 @@ protected:
     void parseSerialInput(void);
 
     // Serial communication variables
+    char serialBuffer[64];
+    int bufIdx = 0;
     String serialInput;
     String data;
 

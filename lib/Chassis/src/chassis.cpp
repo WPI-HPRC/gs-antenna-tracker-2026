@@ -5,7 +5,7 @@ Chassis::Chassis() {}
 /// @brief Updates and runs chassis functions
 void Chassis::chassisLoop() {
     if (azEnabled)azMotor->runSpeed();
-    if (elEnabled) elMotor->runSpeed();
+    if (elEnabled)elMotor->runSpeed();
 
     // Checkers and Handlers
     if (checkAzAlarm()) handleAzAlarm();

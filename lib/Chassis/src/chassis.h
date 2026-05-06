@@ -3,6 +3,7 @@
 #include <AccelStepper.h>
 #include <Arduino.h>
 #include <math.h>
+#define ENCODER_OPTIMIZE_INTERRUPTS
 #include <Encoder.h>
 #include "hallEffect.h"
 

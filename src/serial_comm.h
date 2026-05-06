@@ -2,52 +2,65 @@
 
 #include "tracker.h"
 
+// In serial_comm.cpp
 bool Tracker::checkSerialInput() {
-    bool messageReceived = false;
-    // Process ALL waiting bytes in the buffer
     while (Serial.available() > 0) {
         char c = Serial.read();
         if (c == '\n') {
-            if (serialInput.length() >= 2) {
-                data = serialInput.substring(2);
-            }
-            messageReceived = true; 
-            // Don't 'return true' here; let it finish clearing the buffer 
-            // if there's a second message waiting
-        } else {
-            serialInput += c;
+            serialBuffer[bufIdx] = '\0'; // Cap the string
+            bufIdx = 0;
+            return true;
+        } else if (bufIdx < 63) {
+            serialBuffer[bufIdx++] = c;
         }
     }
-    return messageReceived;
+    return false;
 }
 
 void Tracker::parseSerialInput()
 {
-  if (serialInput.length() == 0) return;
+    // 1. Check if the buffer has any data
+    if (serialBuffer[0] == '\0') return;
 
-  switch(serialInput[0])
-  {
-    case 'V': { 
-        int commaIndex = data.indexOf(',');
-        if (commaIndex != -1) {
-            float az = data.substring(0, commaIndex).toFloat();
-            
-            // Only move if we are in a state that allows manual control
-            if (trackerState == TRACKER_REMOTE) {
-                chassis->setSpeed(az, 0);
+    // 2. Use the first character of the buffer for the switch
+    switch(serialBuffer[0])
+    {
+        case 'V': { 
+            // serialBuffer looks like "V,0.500,-0.200"
+            // We find the first comma (skipping the 'V')
+            char* firstComma = strchr(serialBuffer, ',');
+            if (firstComma != nullptr) {
+                // dataStart points to the first number "0.500"
+                char* dataStart = firstComma + 1; 
+                
+                // atof converts the C-string segment to a float
+                float az = atof(dataStart);
+                
+                // Find the second comma to get the elevation
+                char* secondComma = strchr(dataStart, ',');
+                float el = 0;
+                if (secondComma != nullptr) {
+                    el = atof(secondComma + 1);
+                }
+
+                if (trackerState == TRACKER_REMOTE) {
+                    chassis->setSpeed(az, el);
+                }
             }
+            break;
         }
-        break;
+
+        case 'S': {
+            // Find the comma to get the state string
+            char* stateStart = strchr(serialBuffer, ',');
+            if (stateStart != nullptr) {
+                stateStart++; // Move past the comma
+                
+                // strcmp compares C-strings (returns 0 if they match)
+                if (strcmp(stateStart, "REMOTE") == 0) enterRemoteState();
+                else if (strcmp(stateStart, "IDLE") == 0) enterIdleState();
+            }
+            break;
+        }
     }
-
-    case 'S': // State Input "S,TRACKING"
-        data.trim(); // Clean up hidden \r or spaces
-        if (data == "REMOTE") enterRemoteState();
-        else if (data == "IDLE") enterIdleState();
-        break;
-  }
-
-  // CRITICAL: Clear the buffer for the next controller packet
-  serialInput = "";
-  data = "";
 }
