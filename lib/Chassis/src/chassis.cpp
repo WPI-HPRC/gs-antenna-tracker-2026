@@ -8,10 +8,10 @@ void Chassis::chassisLoop() {
     if (elEnabled)elMotor->runSpeed();
 
     // Checkers and Handlers
-    if (checkAzAlarm()) handleAzAlarm();
-    if (checkElAlarm()) handleElAlarm();
     if (checkFrontHall()) handleFrontHall();
     if (checkRearHall()) handleRearHall();
+    // if (checkAzAlarm()) handleAzAlarm();
+    // if (checkElAlarm()) handleElAlarm();
 }
 
 /// @brief Initializes chassis motors and drivers
@@ -19,8 +19,6 @@ void Chassis::initializeChassis() {
     // Define motors, encoders, and hall effect sensors
     azMotor = new AccelStepper(AccelStepper::DRIVER, AZ_STEP_PIN, AZ_DIR_PIN);
     elMotor = new AccelStepper(AccelStepper::DRIVER, EL_STEP_PIN, EL_DIR_PIN);
-    azEncoder = new Encoder(AZ_ENCA_PIN, AZ_ENCB_PIN);
-    elEncoder = new Encoder(EL_ENCA_PIN, EL_ENCB_PIN);
     frontHall = new HallEffect(FRONT_HALL_PIN);
     rearHall = new HallEffect(REAR_HALL_PIN);
 
@@ -95,6 +93,14 @@ void Chassis::setAccel(float azAccel, float elAccel) {
     elMotor->setAcceleration(elRadToStep(elAccel));
 }
 
+float Chassis::getAzPose() {
+    return azStepToRad(azMotor->currentPosition());
+}
+
+float Chassis::getElPose() {
+    return elStepToRad(elMotor->currentPosition());
+}
+
 /// @brief Checks if the front hall effect sensor was triggered
 /// @return Returns true once if detected
 bool Chassis::checkFrontHall() {
@@ -112,7 +118,11 @@ bool Chassis::checkFrontHall() {
 
 /// @brief Updates encoder count to match front hall
 void Chassis::handleFrontHall() {
-    elEncoder->write(FRONT_ENCODER_COUNT);
+    if (elMotor->speed() > 0) {
+        elMotor->setCurrentPosition(elRadToStep(0.88));
+    } else {
+        elMotor->setCurrentPosition(elRadToStep(1.12));
+    }
 }
 
 /// @brief Checks if the front hall effect sensor was triggered
@@ -132,7 +142,11 @@ bool Chassis::checkRearHall() {
 
 /// @brief Updates encoder count to match rear hall
 void Chassis::handleRearHall() {
-    elEncoder->write(REAR_ENCODER_COUNT);
+    if (elMotor->speed() > 0) {
+        elMotor->setCurrentPosition(elRadToStep(2.04));
+    } else {
+        elMotor->setCurrentPosition(elRadToStep(2.29));
+    }
 }
 
 /// @brief Checks if the azimuth alarm is on

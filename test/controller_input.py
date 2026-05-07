@@ -5,7 +5,7 @@ import time
 # --- Settings ---
 SERIAL_PORT = 'COM3' 
 BAUD_RATE = 115200
-DEADZONE = 0.12  # Slightly wider for better centering
+DEADZONE = 0.15  # Slightly wider for better centering
 UPDATE_RATE = 0.05 # 20Hz is plenty (0.05s) and much more stable for Serial
 
 # Initialize Serial with write timeouts
@@ -51,8 +51,8 @@ try:
         pygame.event.pump()
 
         # 1. Axis Input
-        az_input = -controller.get_axis(0)  
-        el_input = -controller.get_axis(1) 
+        az_input = -controller.get_axis(2)  
+        el_input = -controller.get_axis(3) 
 
         # 2. Apply Deadzone
         if abs(az_input) < DEADZONE: az_input = 0

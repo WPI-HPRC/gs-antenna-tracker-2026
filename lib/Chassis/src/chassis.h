@@ -3,8 +3,6 @@
 #include <AccelStepper.h>
 #include <Arduino.h>
 #include <math.h>
-#define ENCODER_OPTIMIZE_INTERRUPTS
-#include <Encoder.h>
 #include "hallEffect.h"
 
 class Chassis
@@ -12,7 +10,7 @@ class Chassis
 protected:
     // --- Configuration ---
     const int STEPS_PER_REV = 1600;
-    const int AZ_GEAR_REDUCTION = 40;
+    const int AZ_GEAR_REDUCTION = 10;
     const int EL_GEAR_REDUCTION = 40;
     const int MAX_RPM = 1000; // Physical limit = 1500RPM, DONT APPROACH
     const int ACCELERATION = 50;
@@ -28,28 +26,20 @@ protected:
     const uint8_t AZ_ENCB_PIN = 32;
 
     // --- Elevation Pin Definitions ---
-    const uint8_t EL_STEP_PIN = 13;
-    const uint8_t EL_DIR_PIN  = 10;
+    const uint8_t EL_STEP_PIN = 10;
+    const uint8_t EL_DIR_PIN  = 13;
     const uint8_t EL_EN_PIN   = 11;
     
     const uint8_t EL_ALRM_PIN = 22;
     const uint8_t EL_ENCA_PIN = 30;
     const uint8_t EL_ENCB_PIN = 31;
 
-    const uint8_t FRONT_HALL_PIN = 18; // TODO: DOUBLE CHECK THESE
-    const uint8_t REAR_HALL_PIN  = 19;
-
-    // --- Hall Effect / Encoder Params ---
-    const int32_t FRONT_ENCODER_COUNT = -999; // TODO: Update these
-    const int32_t REAR_ENCODER_COUNT = -999;
+    const uint8_t FRONT_HALL_PIN = 19;
+    const uint8_t REAR_HALL_PIN  = 18;
 
     // Stepper Drivers
     AccelStepper* azMotor;
     AccelStepper* elMotor;
-    
-    // Encoders
-    Encoder* azEncoder;
-    Encoder* elEncoder;
 
     // Hall Effect Sensors
     HallEffect* frontHall;
@@ -86,6 +76,9 @@ public:
     
     void setMaxSpeed(float azSpeed, float elSpeed);
     void setAccel(float azAccel, float elAccel);
+
+    float getAzPose();
+    float getElPose();
 
 protected:
     // Checkers and Handlers

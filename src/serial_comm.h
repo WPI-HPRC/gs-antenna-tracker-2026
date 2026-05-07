@@ -44,7 +44,11 @@ void Tracker::parseSerialInput()
                 }
 
                 if (trackerState == TRACKER_REMOTE) {
-                    chassis->setSpeed(az, el);
+                    chassis->setSpeed(0, el/2);
+                    // Serial.print(">Azimuth Pose:");
+                    // Serial.println(chassis->getAzPose());
+                    Serial.print(">Elevation Pose:");
+                    Serial.println(chassis->getElPose());
                 }
             }
             break;
