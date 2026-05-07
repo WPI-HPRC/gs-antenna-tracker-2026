@@ -118,11 +118,14 @@ bool Chassis::checkFrontHall() {
 
 /// @brief Updates encoder count to match front hall
 void Chassis::handleFrontHall() {
-    if (elMotor->speed() > 0) {
+    float speed = elMotor->speed();
+    if (speed > 0) {
         elMotor->setCurrentPosition(elRadToStep(0.88));
     } else {
         elMotor->setCurrentPosition(elRadToStep(1.12));
     }
+    elMotor->setSpeed(speed);
+    elMotor->runSpeed();
 }
 
 /// @brief Checks if the front hall effect sensor was triggered
@@ -142,11 +145,14 @@ bool Chassis::checkRearHall() {
 
 /// @brief Updates encoder count to match rear hall
 void Chassis::handleRearHall() {
-    if (elMotor->speed() > 0) {
+    float speed = elMotor->speed();
+    if (speed > 0) {
         elMotor->setCurrentPosition(elRadToStep(2.04));
     } else {
         elMotor->setCurrentPosition(elRadToStep(2.29));
     }
+    elMotor->setSpeed(speed);
+    elMotor->runSpeed();
 }
 
 /// @brief Checks if the azimuth alarm is on
