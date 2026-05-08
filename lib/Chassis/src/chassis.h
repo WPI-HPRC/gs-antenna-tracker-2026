@@ -9,9 +9,9 @@ class Chassis
 {
 protected:
     // --- Configuration ---
-    const int STEPS_PER_REV = 1600;
+    const int STEPS_PER_REV = 400;
     const int AZ_GEAR_REDUCTION = 10;
-    const int EL_GEAR_REDUCTION = 40;
+    const int EL_GEAR_REDUCTION = 50;
     const int MAX_RPM = 1000; // Physical limit = 1500RPM, DONT APPROACH
     const int ACCELERATION = 50;
     const int PULSE_WIDTH = 10;

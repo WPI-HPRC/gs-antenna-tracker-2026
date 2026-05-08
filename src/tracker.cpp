@@ -23,16 +23,16 @@ void Tracker::trackerLoop() {
         float elError = targetElPose - chassis->getElPose();
         chassis->setSpeed(0, KpEl * elError);
 
-        if (counter % 1000 == 0) {
-            Serial.print(">Elevation Error: ");
-            Serial.print(elError);
+        // if (counter % 1000 == 0) {
+        //     (">Elevation Error: ");
+        //     Serial.print(elError);
 
-            Serial.print("   >Target Elevation: ");
-            Serial.print(targetElPose);
+        //     Serial.print("   >Target Elevation: ");
+        //     Serial.print(targetElPose);
 
-            Serial.print("   >Current Elevation: ");
-            Serial.println(chassis->getElPose());
-        }
+        //     Serial.print("   >Current Elevation: ");
+        //     Serial.println(chassis->getElPose());
+        // }
 
         counter++;
     }
@@ -45,7 +45,7 @@ void Tracker::initializeTracker() {
     chassis = new Chassis();
     chassis->initializeChassis();
     
-    chassis->setMaxSpeed(0.524, 0.524);
+    chassis->setMaxSpeed(0.262, 0.262);
 }
 
 void Tracker::enterIdleState() {
@@ -61,18 +61,21 @@ void Tracker::enterIdleState() {
 
 void Tracker::enterTrackingState() {
     Serial.println("Entering Tracking State");
+    chassis->setSpeed(0, 0);
     chassis->enable(true, true);
     trackerState = TRACKER_TRACKING;
 }
 
 void Tracker::enterRemoteState() {
     Serial.println("Entering Remote State");
+    chassis->setSpeed(0, 0);
     chassis->enable(true, true);
     trackerState = TRACKER_REMOTE;
 }
 
 void Tracker::enterCalibratingState() {
     Serial.println("Entering Calibrating State");
+    chassis->setSpeed(0, 0);
     chassis->enable(true, true);
     trackerState = TRACKER_CALIBRATING;
 }
