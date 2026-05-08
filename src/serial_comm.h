@@ -46,6 +46,7 @@ void Tracker::parseSerialInput()
                 if (trackerState == TRACKER_REMOTE) {
                     // chassis->setSpeed(az, el);
                     chassis->setSpeed(0, el);
+                    Serial.println("Current Elevation: " + String(chassis->getElPose()));
                 }
                 
                 if (trackerState == TRACKER_TRACKING) {

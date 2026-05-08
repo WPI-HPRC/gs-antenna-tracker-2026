@@ -144,9 +144,9 @@ bool Chassis::checkFrontHall() {
 void Chassis::handleFrontHall() {
     float speed = elMotor->speed();
     if (speed > 0) {
-        elMotor->setCurrentPosition(elRadToStep(0.88));
+        elMotor->setCurrentPosition(elRadToStep(0.7));
     } else {
-        elMotor->setCurrentPosition(elRadToStep(1.12));
+        elMotor->setCurrentPosition(elRadToStep(0.89));
     }
 
     if (elCalibrating) {
@@ -182,9 +182,9 @@ bool Chassis::checkRearHall() {
 void Chassis::handleRearHall() {
     float speed = elMotor->speed();
     if (speed > 0) {
-        elMotor->setCurrentPosition(elRadToStep(2.04));
+        elMotor->setCurrentPosition(elRadToStep(2.26));
     } else {
-        elMotor->setCurrentPosition(elRadToStep(2.29));
+        elMotor->setCurrentPosition(elRadToStep(2.51));
     }
 
     if (elCalibrating) {
