@@ -22,11 +22,11 @@ void Chassis::initializeChassis() {
     frontHall = new HallEffect(FRONT_HALL_PIN);
     rearHall = new HallEffect(REAR_HALL_PIN);
 
-    // Setup enable pins and set to low (Enabled)
+    // Setup enable pins and set to high (Disabled)
     pinMode(AZ_EN_PIN, OUTPUT);
     pinMode(EL_EN_PIN, OUTPUT);
-    digitalWrite(AZ_EN_PIN, LOW);
-    digitalWrite(EL_EN_PIN, LOW);
+    digitalWrite(AZ_EN_PIN, HIGH);
+    digitalWrite(EL_EN_PIN, HIGH);
 
     // Setup alarm pins for read
     pinMode(AZ_ALRM_PIN, INPUT);
@@ -101,6 +101,30 @@ float Chassis::getElPose() {
     return elStepToRad(elMotor->currentPosition());
 }
 
+/// @brief Spins in a direction until either hall effect sensor is triggered
+/// @param positiveDir Spin in the positive direction if true
+void Chassis::calibrateEl(bool positiveDir) {
+    elCalibrating = true;
+
+    if (positiveDir) {
+        elMotor->setSpeed(elRadToStep(0.25));
+    } else {
+        elMotor->setSpeed(elRadToStep(-0.25));
+    }
+}
+
+void Chassis::calibrateAz(bool accurate) {
+    azCalibrating = true;
+
+    if (!accurate) {
+        azMotor->setSpeed(azRadToStep(2*PI/15)); // 1 revolution every 15 seconds
+        azMotor->runSpeed();
+    } else {
+        azMotor->setSpeed(0);
+        azMotor->runSpeed();
+    }
+}
+
 /// @brief Checks if the front hall effect sensor was triggered
 /// @return Returns true once if detected
 bool Chassis::checkFrontHall() {
@@ -124,8 +148,19 @@ void Chassis::handleFrontHall() {
     } else {
         elMotor->setCurrentPosition(elRadToStep(1.12));
     }
-    elMotor->setSpeed(speed);
-    elMotor->runSpeed();
+
+    if (elCalibrating) {
+        // Ensures elevation stops when calibration is complete
+        Serial.println("Elevation Calibrated!");
+        elCalibrating = false;
+
+        elMotor->setSpeed(0);
+        elMotor->runSpeed();
+    } else {
+        elMotor->setSpeed(speed);
+        elMotor->runSpeed();
+    }
+
 }
 
 /// @brief Checks if the front hall effect sensor was triggered
@@ -151,8 +186,18 @@ void Chassis::handleRearHall() {
     } else {
         elMotor->setCurrentPosition(elRadToStep(2.29));
     }
-    elMotor->setSpeed(speed);
-    elMotor->runSpeed();
+
+    if (elCalibrating) {
+        // Ensures elevation stops when calibration is complete
+        Serial.println("Elevation Calibrated!");
+        elCalibrating = false;
+
+        elMotor->setSpeed(0);
+        elMotor->runSpeed();
+    } else {
+        elMotor->setSpeed(speed);
+        elMotor->runSpeed();
+    }
 }
 
 /// @brief Checks if the azimuth alarm is on

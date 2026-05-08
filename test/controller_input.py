@@ -72,6 +72,14 @@ try:
             if last_state_cmd != "REMOTE":
                 current_command = "S,REMOTE\n"
                 last_state_cmd = "REMOTE"
+        elif controller.get_button(3): # 'Y' Button -> CALIBRATE
+            if last_state_cmd != "CALIBRATE":
+                current_command = "S,CALIBRATE\n"
+                last_state_cmd = "CALIBRATE"
+        elif controller.get_button(2): # 'X' Button -> TRACKING
+            if last_state_cmd != "TRACKING":
+                current_command = "S,TRACKING\n"
+                last_state_cmd = "TRACKING"
         else:
             # If no button is pressed, we allow velocity updates
             # Only send V if the stick has moved more than 1% to save bandwidth
@@ -84,7 +92,7 @@ try:
         if current_command:
             try:
                 ser.write(current_command.encode())
-                print(f"Outgoing: {current_command.strip()}")
+                # print(f"Outgoing: {current_command.strip()}")
             except serial.SerialTimeoutException:
                 print("TX Timeout: Teensy is busy/buffer full")
             except Exception as e:

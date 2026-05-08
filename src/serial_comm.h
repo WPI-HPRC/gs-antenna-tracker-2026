@@ -44,11 +44,13 @@ void Tracker::parseSerialInput()
                 }
 
                 if (trackerState == TRACKER_REMOTE) {
-                    chassis->setSpeed(0, el/2);
-                    // Serial.print(">Azimuth Pose:");
-                    // Serial.println(chassis->getAzPose());
-                    Serial.print(">Elevation Pose:");
-                    Serial.println(chassis->getElPose());
+                    // chassis->setSpeed(az, el);
+                    chassis->setSpeed(0, el);
+                }
+                
+                if (trackerState == TRACKER_TRACKING) {
+                    targetAz = az * PI;
+                    targetEl = el * PI;
                 }
             }
             break;
@@ -63,6 +65,8 @@ void Tracker::parseSerialInput()
                 // strcmp compares C-strings (returns 0 if they match)
                 if (strcmp(stateStart, "REMOTE") == 0) enterRemoteState();
                 else if (strcmp(stateStart, "IDLE") == 0) enterIdleState();
+                else if (strcmp(stateStart, "TRACKING") == 0) enterTrackingState();
+                else if (strcmp(stateStart, "CALIBRATE") == 0) enterCalibratingState();
             }
             break;
         }

@@ -5,6 +5,11 @@
 
 class Tracker
 {
+protected:
+    // Configuration Parameters
+    float KpAz = 0.2;
+    float KpEl = 2.5;
+
 public:
     void initializeTracker(void);
     void trackerLoop(void);
@@ -15,9 +20,19 @@ protected:
     void enterIdleState(void);
     void enterTrackingState(void);
     void enterRemoteState(void);
+    void enterCalibratingState(void);
 
     bool checkSerialInput(void);
     void parseSerialInput(void);
+
+    // Calibration Variables
+    bool elCalibrated = false;
+    bool azCalibrated = false;
+    long int counter = 0;
+
+    // Remote Control Variables
+    float targetAz = 0;
+    float targetEl = 0;
 
     // Serial communication variables
     char serialBuffer[64];

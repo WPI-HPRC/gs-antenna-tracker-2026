@@ -45,10 +45,6 @@ protected:
     HallEffect* frontHall;
     HallEffect* rearHall;
 
-    // Calibration Parameters
-    bool azCalibrated = false;
-    bool elCalibrated = false;
-
     // Hall Effect Parameters
     bool frontPrevDetected = false;
     bool rearPrevDetected = false;
@@ -63,6 +59,10 @@ protected:
     // Stepper Enable Parameters
     bool azEnabled = true;
     bool elEnabled = true;
+
+    // Calibration Parameters
+    bool elCalibrating = false;
+    bool azCalibrating = false;
 
 public:
     Chassis(void);
@@ -79,6 +79,9 @@ public:
 
     float getAzPose();
     float getElPose();
+
+    void calibrateEl(bool positiveDir);
+    void calibrateAz(bool accurate);
 
 protected:
     // Checkers and Handlers
