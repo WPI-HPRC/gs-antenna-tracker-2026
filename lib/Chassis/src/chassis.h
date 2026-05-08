@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AccelStepper.h>
+#include <TeensyStep.h>
 #include <Arduino.h>
 #include <math.h>
 #include "hallEffect.h"
@@ -9,7 +9,7 @@ class Chassis
 {
 protected:
     // --- Configuration ---
-    const int STEPS_PER_REV = 1600;
+    const int STEPS_PER_REV = 400;
     const int AZ_GEAR_REDUCTION = 10;
     const int EL_GEAR_REDUCTION = 40;
     const int MAX_RPM = 1000; // Physical limit = 1500RPM, DONT APPROACH
@@ -38,8 +38,12 @@ protected:
     const uint8_t REAR_HALL_PIN  = 18;
 
     // Stepper Drivers
-    AccelStepper* azMotor;
-    AccelStepper* elMotor;
+    TeensyStep::Stepper* azMotor;
+    TeensyStep::Stepper* elMotor;
+
+    // Using the explicit base classes bypasses the 'StepControl' alias issue
+    TeensyStep::StepControlBase<TeensyStep::LinStepAccelerator, TeensyStep::TickTimerField>* azControl;
+    TeensyStep::StepControlBase<TeensyStep::LinStepAccelerator, TeensyStep::TickTimerField>* elControl;
 
     // Hall Effect Sensors
     HallEffect* frontHall;
@@ -82,6 +86,9 @@ public:
 
     void calibrateEl(bool positiveDir);
     void calibrateAz(bool accurate);
+
+    void azMoveTo(float azTarget);
+    void elMoveTo(float elTarget);
 
 protected:
     // Checkers and Handlers

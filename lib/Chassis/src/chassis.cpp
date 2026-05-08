@@ -4,8 +4,11 @@ Chassis::Chassis() {}
 
 /// @brief Updates and runs chassis functions
 void Chassis::chassisLoop() {
-    if (azEnabled)azMotor->runSpeed();
-    if (elEnabled)elMotor->runSpeed();
+    // if (azEnabled)azMotor->runSpeed();
+    // if (elEnabled)elMotor->runSpeed();
+
+    // azControl->moveAsync(azMotor);
+    elControl->moveAsync(elMotor);
 
     // Checkers and Handlers
     if (checkFrontHall()) handleFrontHall();
@@ -17,8 +20,10 @@ void Chassis::chassisLoop() {
 /// @brief Initializes chassis motors and drivers
 void Chassis::initializeChassis() {
     // Define motors, encoders, and hall effect sensors
-    azMotor = new AccelStepper(AccelStepper::DRIVER, AZ_STEP_PIN, AZ_DIR_PIN);
-    elMotor = new AccelStepper(AccelStepper::DRIVER, EL_STEP_PIN, EL_DIR_PIN);
+    azMotor = new TeensyStep::Stepper(AZ_STEP_PIN, AZ_DIR_PIN);
+    elMotor = new TeensyStep::Stepper(EL_STEP_PIN, EL_DIR_PIN);
+    azControl = new TeensyStep::StepControlBase<TeensyStep::LinStepAccelerator, TeensyStep::TickTimerField>(1000, 5000);
+    elControl = new TeensyStep::StepControlBase<TeensyStep::LinStepAccelerator, TeensyStep::TickTimerField>(1000, 5000);
     frontHall = new HallEffect(FRONT_HALL_PIN);
     rearHall = new HallEffect(REAR_HALL_PIN);
 
@@ -39,28 +44,34 @@ void Chassis::initializeChassis() {
     // Configure Azimuth Motor
     azMotor->setMaxSpeed(STEPS_PER_REV * MAX_RPM);
     azMotor->setAcceleration(ACCELERATION * AZ_GEAR_REDUCTION);
-    azMotor->setMinPulseWidth(PULSE_WIDTH);
 
     // Configure Elevation
     elMotor->setMaxSpeed(STEPS_PER_REV * MAX_RPM);
     elMotor->setAcceleration(ACCELERATION * EL_GEAR_REDUCTION);
-    elMotor->setMinPulseWidth(PULSE_WIDTH);
 }
 
 /// @brief Sets motor run speeds for next chassis update
 /// @param azSpeed Azimuth rotation speed [rad/s]
 /// @param elSpeed Elevation rotation speed [rad/s]
 void Chassis::setSpeed(float azSpeed, float elSpeed) {
-    azMotor->setSpeed(azRadToStep(azSpeed));
-    elMotor->setSpeed(elRadToStep(elSpeed));
+    // azMotor->setSpeed(azRadToStep(azSpeed));
+    // elMotor->setSpeed(elRadToStep(elSpeed));
+}
+
+void Chassis::azMoveTo(float azTarget) {
+    azMotor->setTargetAbs(azRadToStep(azTarget));
+}
+
+void Chassis::elMoveTo(float elTarget) {
+    elMotor->setTargetAbs(elRadToStep(elTarget));
 }
 
 /// @brief Stops motors
 /// @param az Stops azimuth motor if true
 /// @param el Stops elevation motor if true
 void Chassis::stop(bool az, bool el) {
-    if (az) azMotor->setSpeed(0);
-    if (el) elMotor->setSpeed(0);
+    if (az) azControl->stopAsync();
+    if (el) elControl->stopAsync();
 }
 
 /// @brief Enables or frees motors
@@ -94,35 +105,35 @@ void Chassis::setAccel(float azAccel, float elAccel) {
 }
 
 float Chassis::getAzPose() {
-    return azStepToRad(azMotor->currentPosition());
+    return azStepToRad(azMotor->getPosition());
 }
 
 float Chassis::getElPose() {
-    return elStepToRad(elMotor->currentPosition());
+    return elStepToRad(elMotor->getPosition());
 }
 
 /// @brief Spins in a direction until either hall effect sensor is triggered
 /// @param positiveDir Spin in the positive direction if true
 void Chassis::calibrateEl(bool positiveDir) {
-    elCalibrating = true;
+    // elCalibrating = true;
 
-    if (positiveDir) {
-        elMotor->setSpeed(elRadToStep(0.25));
-    } else {
-        elMotor->setSpeed(elRadToStep(-0.25));
-    }
+    // if (positiveDir) {
+    //     elMotor->setSpeed(elRadToStep(0.25));
+    // } else {
+    //     elMotor->setSpeed(elRadToStep(-0.25));
+    // }
 }
 
 void Chassis::calibrateAz(bool accurate) {
-    azCalibrating = true;
+    // azCalibrating = true;
 
-    if (!accurate) {
-        azMotor->setSpeed(azRadToStep(2*PI/15)); // 1 revolution every 15 seconds
-        azMotor->runSpeed();
-    } else {
-        azMotor->setSpeed(0);
-        azMotor->runSpeed();
-    }
+    // if (!accurate) {
+    //     azMotor->setSpeed(azRadToStep(2*PI/15)); // 1 revolution every 15 seconds
+    //     azMotor->runSpeed();
+    // } else {
+    //     azMotor->setSpeed(0);
+    //     azMotor->runSpeed();
+    // }
 }
 
 /// @brief Checks if the front hall effect sensor was triggered
@@ -142,24 +153,24 @@ bool Chassis::checkFrontHall() {
 
 /// @brief Updates encoder count to match front hall
 void Chassis::handleFrontHall() {
-    float speed = elMotor->speed();
-    if (speed > 0) {
-        elMotor->setCurrentPosition(elRadToStep(0.88));
-    } else {
-        elMotor->setCurrentPosition(elRadToStep(1.12));
-    }
+    // float speed = elMotor->speed();
+    // if (speed > 0) {
+    //     elMotor->setPosition(elRadToStep(0.88));
+    // } else {
+    //     elMotor->setPosition(elRadToStep(1.12));
+    // }
 
-    if (elCalibrating) {
-        // Ensures elevation stops when calibration is complete
-        Serial.println("Elevation Calibrated!");
-        elCalibrating = false;
+    // if (elCalibrating) {
+    //     // Ensures elevation stops when calibration is complete
+    //     Serial.println("Elevation Calibrated!");
+    //     elCalibrating = false;
 
-        elMotor->setSpeed(0);
-        elMotor->runSpeed();
-    } else {
-        elMotor->setSpeed(speed);
-        elMotor->runSpeed();
-    }
+    //     elMotor->setSpeed(0);
+    //     elMotor->runSpeed();
+    // } else {
+    //     elMotor->setSpeed(speed);
+    //     elMotor->runSpeed();
+    // }
 
 }
 
@@ -180,24 +191,24 @@ bool Chassis::checkRearHall() {
 
 /// @brief Updates encoder count to match rear hall
 void Chassis::handleRearHall() {
-    float speed = elMotor->speed();
-    if (speed > 0) {
-        elMotor->setCurrentPosition(elRadToStep(2.04));
-    } else {
-        elMotor->setCurrentPosition(elRadToStep(2.29));
-    }
+    // float speed = elMotor->speed();
+    // if (speed > 0) {
+    //     elMotor->setPosition(elRadToStep(2.04));
+    // } else {
+    //     elMotor->setPosition(elRadToStep(2.29));
+    // }
 
-    if (elCalibrating) {
-        // Ensures elevation stops when calibration is complete
-        Serial.println("Elevation Calibrated!");
-        elCalibrating = false;
+    // if (elCalibrating) {
+    //     // Ensures elevation stops when calibration is complete
+    //     Serial.println("Elevation Calibrated!");
+    //     elCalibrating = false;
 
-        elMotor->setSpeed(0);
-        elMotor->runSpeed();
-    } else {
-        elMotor->setSpeed(speed);
-        elMotor->runSpeed();
-    }
+    //     elMotor->setSpeed(0);
+    //     elMotor->runSpeed();
+    // } else {
+    //     elMotor->setSpeed(speed);
+    //     elMotor->runSpeed();
+    // }
 }
 
 /// @brief Checks if the azimuth alarm is on
