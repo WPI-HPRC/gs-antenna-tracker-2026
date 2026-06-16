@@ -46,8 +46,8 @@ void Tracker::parseSerialInput()
                 azInput = az;
                 elInput = el;
 
-                // Serial.println("azInput: " + String(azInput));
-                // Serial.println("elInput: " + String(elInput));
+                Serial.print("azInput: " + String(azInput));
+                Serial.println("  |  elInput: " + String(elInput));
             }
             break;
         }

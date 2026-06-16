@@ -1,3 +1,4 @@
+import math
 import pygame
 import serial
 import time
@@ -51,15 +52,15 @@ try:
         pygame.event.pump()
 
         # 1. Axis Input
-        az_input = -controller.get_axis(2)  
+        az_input = -controller.get_axis(0)  
         el_input = -controller.get_axis(3) 
 
         # 2. Apply Deadzone
         if abs(az_input) < DEADZONE: az_input = 0
         if abs(el_input) < DEADZONE: el_input = 0
 
-        az_speed = az_input * 0.8
-        el_speed = el_input * 0.8
+        az_speed = az_input * math.pi
+        el_speed = el_input * math.pi
 
         # 3. Check for State Buttons (A/B)
         # We only want to send these ONCE per press

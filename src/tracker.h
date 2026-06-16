@@ -7,7 +7,7 @@ class Tracker
 {
 protected:
     // Configuration Parameters
-    float KpAz = 0.2;
+    float KpAz = 15.0;
     float KpEl = 15.0;
 
 public:

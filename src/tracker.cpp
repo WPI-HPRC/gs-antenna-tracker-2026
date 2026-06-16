@@ -10,11 +10,13 @@ void Tracker::trackerLoop() {
             chassis->calibrateEl(false);
             elCalibrated = true;
         }
+
+        chassis->calibrateAz(false);
     }
 
     if (trackerState == TRACKER_TRACKING) {    
-        targetAz = azInput * PI;
-        targetEl = elInput * PI + PI/2;
+        targetAz = azInput;
+        targetEl = elInput;
 
         // Azimuth Control
         float targetAzPose = targetAz;
@@ -31,16 +33,22 @@ void Tracker::trackerLoop() {
         // chassis->setSpeed(KpAz * azError, KpEl * elError);
         chassis->setSpeed(KpAz * azError, KpEl * elError);
 
-        // // Debugging (remove this later)
+        // Debugging (remove this later)
         // if (counter % 1000 == 0) {
-        //     Serial.print("Elevation Error: ");
-        //     Serial.print(elError);
+        //     Serial.print("Azimuth Target: ");
+        //     Serial.print(targetAzPose);
 
-        //     Serial.print("  |  Target Elevation: ");
+        //     Serial.print("  |  Elevation Target: ");
         //     Serial.print(targetElPose);
 
-        //     Serial.print("  |  Current Elevation: ");
-        //     Serial.println(chassis->getElPose());
+        //     // Serial.print("Elevation Error: ");
+        //     // Serial.print(elError);
+
+        //     // Serial.print("  |  Target Elevation: ");
+        //     // Serial.print(targetElPose);
+
+        //     // Serial.print("  |  Current Elevation: ");
+        //     // Serial.println(chassis->getElPose());
         // }
 
         // counter++;
@@ -60,14 +68,11 @@ void Tracker::initializeTracker() {
     chassis = new Chassis();
     chassis->initializeChassis();
     
-    chassis->setMaxSpeed(0.785, 0.262);
+    chassis->setMaxSpeed(1.571, 0.523);
+    chassis->setAccel(0.005, 0.005);
 }
 
 void Tracker::enterIdleState() {
-    if (trackerState == TRACKER_CALIBRATING) {
-        chassis->calibrateAz(true);
-    }
-
     Serial.println("Entering Idle State");
     chassis->setSpeed(0, 0);
     chassis->enable(false, false);

@@ -114,15 +114,7 @@ void Chassis::calibrateEl(bool positiveDir) {
 }
 
 void Chassis::calibrateAz(bool accurate) {
-    azCalibrating = true;
-
-    if (!accurate) {
-        azMotor->setSpeed(azRadToStep(2*PI/15)); // 1 revolution every 15 seconds
-        azMotor->runSpeed();
-    } else {
-        azMotor->setSpeed(0);
-        azMotor->runSpeed();
-    }
+    azMotor->setCurrentPosition(0);
 }
 
 /// @brief Checks if the front hall effect sensor was triggered
