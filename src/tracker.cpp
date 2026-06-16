@@ -24,8 +24,8 @@ void Tracker::trackerLoop() {
 
         // Elevation Control
         float targetElPose = targetEl;
-        if (targetElPose > PI) targetElPose = PI;
-        if (targetElPose < 0) targetElPose = 0;
+        if (targetElPose > maxLimit) targetElPose = maxLimit;
+        if (targetElPose < minLimit) targetElPose = minLimit;
         float elError = targetElPose - chassis->getElPose();
 
 

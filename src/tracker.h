@@ -33,6 +33,8 @@ protected:
     // Remote Control Variables
     float targetAz = 0;
     float targetEl = 0;
+    float maxLimit = 1.92; // 90 degrees in radians
+    float minLimit = 0;    // 0 degrees in radians
 
     // Serial communication variables
     char serialBuffer[64];
