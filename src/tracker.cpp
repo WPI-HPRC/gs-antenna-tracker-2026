@@ -12,29 +12,44 @@ void Tracker::trackerLoop() {
         }
     }
 
-    if (trackerState == TRACKER_TRACKING) {
-        // float azError = targetAz - chassis->getAzPose();
+    if (trackerState == TRACKER_TRACKING) {    
+        targetAz = azInput * PI;
+        targetEl = elInput * PI + PI/2;
 
-        float targetElPose = targetEl + PI/2;
+        // Azimuth Control
+        float targetAzPose = targetAz;
+        float azError = targetAzPose - chassis->getAzPose();
 
+        // Elevation Control
+        float targetElPose = targetEl;
         if (targetElPose > PI) targetElPose = PI;
         if (targetElPose < 0) targetElPose = 0;
-
         float elError = targetElPose - chassis->getElPose();
-        chassis->setSpeed(0, KpEl * elError);
 
+
+        // Drive motors with proportional control
+        // chassis->setSpeed(KpAz * azError, KpEl * elError);
+        chassis->setSpeed(KpAz * azError, KpEl * elError);
+
+        // // Debugging (remove this later)
         // if (counter % 1000 == 0) {
-        //     (">Elevation Error: ");
+        //     Serial.print("Elevation Error: ");
         //     Serial.print(elError);
 
-        //     Serial.print("   >Target Elevation: ");
+        //     Serial.print("  |  Target Elevation: ");
         //     Serial.print(targetElPose);
 
-        //     Serial.print("   >Current Elevation: ");
+        //     Serial.print("  |  Current Elevation: ");
         //     Serial.println(chassis->getElPose());
         // }
 
-        counter++;
+        // counter++;
+    }
+
+    if (trackerState == TRACKER_REMOTE) {
+        // chassis->setSpeed(az, el);
+        chassis->setSpeed(azInput, elInput);
+        // Serial.println("Current Elevation: " + String(chassis->getElPose()));
     }
 
     chassis->chassisLoop();
@@ -45,7 +60,7 @@ void Tracker::initializeTracker() {
     chassis = new Chassis();
     chassis->initializeChassis();
     
-    chassis->setMaxSpeed(0.262, 0.262);
+    chassis->setMaxSpeed(0.785, 0.262);
 }
 
 void Tracker::enterIdleState() {

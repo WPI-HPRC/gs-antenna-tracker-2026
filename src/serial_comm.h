@@ -42,17 +42,12 @@ void Tracker::parseSerialInput()
                 if (secondComma != nullptr) {
                     el = atof(secondComma + 1);
                 }
-
-                if (trackerState == TRACKER_REMOTE) {
-                    // chassis->setSpeed(az, el);
-                    chassis->setSpeed(0, el);
-                    Serial.println("Current Elevation: " + String(chassis->getElPose()));
-                }
                 
-                if (trackerState == TRACKER_TRACKING) {
-                    targetAz = az * PI;
-                    targetEl = el * PI;
-                }
+                azInput = az;
+                elInput = el;
+
+                // Serial.println("azInput: " + String(azInput));
+                // Serial.println("elInput: " + String(elInput));
             }
             break;
         }

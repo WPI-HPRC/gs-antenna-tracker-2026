@@ -8,7 +8,7 @@ class Tracker
 protected:
     // Configuration Parameters
     float KpAz = 0.2;
-    float KpEl = 2.5;
+    float KpEl = 15.0;
 
 public:
     void initializeTracker(void);
@@ -39,6 +39,9 @@ protected:
     int bufIdx = 0;
     String serialInput;
     String data;
+    bool updateFlag = false;
+    float azInput = 0;
+    float elInput = 0;
 
     // Enumerate tracker states
     enum TRACKER_STATE

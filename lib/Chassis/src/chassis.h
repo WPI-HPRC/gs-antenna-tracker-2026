@@ -34,8 +34,8 @@ protected:
     const uint8_t EL_ENCA_PIN = 30;
     const uint8_t EL_ENCB_PIN = 31;
 
-    const uint8_t FRONT_HALL_PIN = 19;
-    const uint8_t REAR_HALL_PIN  = 18;
+    const uint8_t FRONT_HALL_PIN = 18;
+    const uint8_t REAR_HALL_PIN  = 19;
 
     // Stepper Drivers
     AccelStepper* azMotor;

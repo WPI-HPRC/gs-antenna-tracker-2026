@@ -88,6 +88,9 @@ try:
                 last_az = az_input
                 last_el = el_input
 
+                # print(f"last_az: {last_az}")
+                # print(f"last_el: {last_el}")
+
         # 4. Attempt to Write
         if current_command:
             try:
