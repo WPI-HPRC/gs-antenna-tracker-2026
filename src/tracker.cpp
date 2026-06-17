@@ -11,7 +11,10 @@ void Tracker::trackerLoop() {
             elCalibrated = true;
         }
 
-        chassis->calibrateAz(false);
+        if (!azCalibrated) {
+            chassis->calibrateAz(false);
+            azCalibrated = true;
+        }
     }
 
     if (trackerState == TRACKER_TRACKING) {    
@@ -30,7 +33,6 @@ void Tracker::trackerLoop() {
 
 
         // Drive motors with proportional control
-        // chassis->setSpeed(KpAz * azError, KpEl * elError);
         chassis->setSpeed(KpAz * azError, KpEl * elError);
 
         // Debugging (remove this later)
@@ -41,23 +43,27 @@ void Tracker::trackerLoop() {
         //     Serial.print("  |  Elevation Target: ");
         //     Serial.print(targetElPose);
 
-        //     // Serial.print("Elevation Error: ");
-        //     // Serial.print(elError);
+            // Serial.print("Elevation Error: ");
+            // Serial.print(elError);
 
-        //     // Serial.print("  |  Target Elevation: ");
-        //     // Serial.print(targetElPose);
+            // Serial.print("  |  Target Elevation: ");
+            // Serial.print(targetElPose);
 
-        //     // Serial.print("  |  Current Elevation: ");
-        //     // Serial.println(chassis->getElPose());
+            // Serial.print("  |  Current Elevation: ");
+            // Serial.println(chassis->getElPose());
         // }
 
         // counter++;
     }
 
     if (trackerState == TRACKER_REMOTE) {
-        // chassis->setSpeed(az, el);
+        // If both axes are calibrated, enforce limits on elevation input
+        if (azCalibrated && elCalibrated) {
+            if (chassis->getElPose() > maxLimit && elInput > 0) elInput = 0;
+            if (chassis->getElPose() < minLimit && elInput < 0) elInput = 0;
+        }
+
         chassis->setSpeed(azInput, elInput);
-        // Serial.println("Current Elevation: " + String(chassis->getElPose()));
     }
 
     chassis->chassisLoop();
@@ -73,10 +79,18 @@ void Tracker::initializeTracker() {
 }
 
 void Tracker::enterIdleState() {
-    Serial.println("Entering Idle State");
-    chassis->setSpeed(0, 0);
-    chassis->enable(false, false);
-    trackerState = TRACKER_IDLE;
+    if (elCalibrated && azCalibrated) {
+        Serial.println("Entering Idle Locked State");
+        chassis->setSpeed(0, 0);
+        chassis->enable(true, true);
+        trackerState = TRACKER_IDLE;
+    } else {
+        Serial.println("Entering Idle State");
+        chassis->setSpeed(0, 0);
+        chassis->enable(false, false);
+        trackerState = TRACKER_IDLE;
+    }
+    return;
 }
 
 void Tracker::enterTrackingState() {
