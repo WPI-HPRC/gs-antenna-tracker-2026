@@ -62,7 +62,7 @@ try:
         if abs(az_input) < DEADZONE: az_input = 0
         if abs(el_input) < DEADZONE: el_input = 0
 
-        az_speed = az_input**3 * math.pi
+        az_speed = az_input**5 * math.pi
         el_speed = el_input**3 * math.pi
 
         # 3. Check for State Buttons (Mapped to physical positions)
