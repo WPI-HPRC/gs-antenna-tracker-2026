@@ -4,7 +4,7 @@ import serial
 import time
 
 # --- Settings ---
-SERIAL_PORT = 'COM3' 
+SERIAL_PORT = '/dev/ttyACM0' 
 BAUD_RATE = 115200
 DEADZONE = 0.15      # Slightly wider for better centering
 UPDATE_RATE = 0.05   # 20Hz is plenty (0.05s) and much more stable for Serial
@@ -14,12 +14,12 @@ UPDATE_RATE = 0.05   # 20Hz is plenty (0.05s) and much more stable for Serial
 # Physical Button Placements:
 BTN_BOTTOM = 0  # Xbox 'A', PlayStation 'Cross', Switch 'B'
 BTN_RIGHT  = 1  # Xbox 'B', PlayStation 'Circle', Switch 'A'
-BTN_LEFT   = 2  # Xbox 'X', PlayStation 'Square', Switch 'Y'
-BTN_TOP    = 3  # Xbox 'Y', PlayStation 'Triangle', Switch 'X'
+BTN_LEFT   = 3  # Xbox 'X', PlayStation 'Square', Switch 'Y'
+BTN_TOP    = 2  # Xbox 'Y', PlayStation 'Triangle', Switch 'X'
 
 # Axis Assignments:
-AXIS_AZIMUTH = 0   # Left Stick X-Axis
-AXIS_ELEVATION = 3 # Right Stick Y-Axis (Note: On some OS/drivers, this might be Axis 4)
+AXIS_AZIMUTH = 3   # Left Stick X-Axis
+AXIS_ELEVATION = 1 # Right Stick Y-Axis (Note: On some OS/drivers, this might be Axis 4)
 
 # Initialize Serial with write timeouts
 try:
@@ -62,8 +62,8 @@ try:
         if abs(az_input) < DEADZONE: az_input = 0
         if abs(el_input) < DEADZONE: el_input = 0
 
-        az_speed = az_input**5 * math.pi
-        el_speed = el_input**3 * math.pi
+        az_speed = az_input**3 * math.pi/5
+        el_speed = el_input**3 * math.pi/2 
 
         # 3. Check for State Buttons (Mapped to physical positions)
         current_command = None
